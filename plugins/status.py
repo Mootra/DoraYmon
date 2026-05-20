@@ -14,7 +14,5 @@ def handle(context: BotContext) -> str:
             f"启动时间：{context.started_at:%Y-%m-%d %H:%M:%S}",
             f"运行时长：{str(uptime).split('.')[0]}",
             f"当前模式：{mode}",
-            f"数据目录：{context.settings.data_dir}",
-            f"日志目录：{context.settings.log_dir}",
         ]
     )

@@ -1,6 +1,6 @@
 # DoraYmon
 
-DoraYmon 是一个干净、独立、可维护、可部署、可上传 GitHub 的 Python QQ Bot 项目骨架。它使用 `botpy` 接入 QQ Bot，默认使用 DeepSeek API 提供 LLM 能力，并预留插件、SQLite、日志和旧功能迁移空间。
+DoraYmon 是一个干净、独立、可维护、可部署 的 Python QQ Bot 项目骨架。它使用 `botpy` 接入 QQ Bot，默认使用 DeepSeek API 提供 LLM 能力，并预留插件、SQLite、日志和旧功能迁移空间。
 
 ## 项目结构
 

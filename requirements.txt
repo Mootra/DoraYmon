@@ -1,4 +1,4 @@
-botpy
-python-dotenv
-PyYAML
-requests
+qq-botpy==1.2.1
+python-dotenv==1.2.2
+PyYAML==6.0.3
+requests==2.34.2
