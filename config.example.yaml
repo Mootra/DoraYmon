@@ -1,0 +1,21 @@
+qqbot:
+  appid: ""
+  secret: ""
+  sandbox: true
+
+deepseek:
+  api_key: ""
+  base_url: "https://api.deepseek.com"
+  model: "deepseek-chat"
+  temperature: 0.7
+
+bot:
+  command_prefix: "/"
+  admin_openids: []
+
+log:
+  level: "INFO"
+
+paths:
+  data_dir: "data"
+  log_dir: "logs"
