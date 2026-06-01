@@ -1,6 +1,6 @@
 # 架构说明
 
-DoraYmon 是一个独立的 Python QQ Bot 项目。项目不放在 `botpy/examples/` 下，方便单独部署、维护和迁移旧功能。
+DoraYmon 是一个独立的 Python QQ Bot 项目。项目不放在 `botpy/examples/` 下，方便单独部署、维护和扩展功能。
 
 ## 分层
 
@@ -30,17 +30,6 @@ services/ 或 storage/
 返回文本给 QQ
 ```
 
-## 旧功能迁移
+## 扩展原则
 
-| 旧文件 | 新位置 |
-| --- | --- |
-| `weather_api.py` | `plugins/weather.py` + `services/weather_service.py` |
-| `fortune_by_sqlite.py` | `plugins/fortune.py` + `storage/db.py` |
-| `sign_in.py` | `plugins/sign_in.py` + `storage/sign_store.py` |
-| `user_todo_list.py` | `plugins/todo.py` + `storage/user_store.py` |
-| `llm_api.py` | `plugins/chat.py` + `services/deepseek_service.py` |
-| `img_upload.py` | `services/image_service.py` |
-| `skills/SKILL.md` | `skills/example_skill.md` |
-| `friend_text_compact.md` | 本地私有 skills 文件，不上传 GitHub |
-
-迁移时一次只处理一个插件。先拆出存储层或服务层，再接入插件命令，最后补文档和验证步骤。
+新增功能时一次只处理一个插件。先确定命令入口，再拆出存储层或服务层，最后接入路由并补充验证步骤。

@@ -1,6 +1,6 @@
 # DoraYmon
 
-DoraYmon 是一个 Python QQ Bot 项目。它使用 `botpy` 接入 QQ Bot，命令按插件组织，聊天能力通过 DeepSeek API 提供。项目内置 SQLite 存储、日志、本地运行脚本和部署说明，方便把旧脚本逐步迁移成可维护的机器人功能。
+DoraYmon 是一个 Python QQ Bot 项目。它使用 `botpy` 接入 QQ Bot，命令按插件组织，聊天能力通过 DeepSeek API 提供。项目内置 SQLite 存储、日志、本地运行脚本和部署说明，方便持续扩展机器人功能。
 
 ## 项目结构
 
@@ -195,19 +195,6 @@ git status
 2. 写一个接收 `BotContext` 并返回字符串的 `handle` 函数。
 3. 在 `doraymon/router.py` 的 `COMMANDS` 注册命令。
 4. 数据库逻辑放 `storage/`，外部 API 放 `services/`。
-
-## 旧项目迁移
-
-| 旧文件 | 新位置 |
-| --- | --- |
-| `weather_api.py` | `plugins/weather.py` + `services/weather_service.py` |
-| `fortune_by_sqlite.py` | `plugins/fortune.py` + `storage/db.py` |
-| `sign_in.py` | `plugins/sign_in.py` + `storage/sign_store.py` |
-| `user_todo_list.py` | `plugins/todo.py` + `storage/user_store.py` |
-| `llm_api.py` | `plugins/chat.py` + `services/deepseek_service.py` |
-| `img_upload.py` | `services/image_service.py` |
-| `skills/SKILL.md` | `skills/example_skill.md` |
-| `friend_text_compact.md` | 本地私有 skills 文件，不上传 GitHub |
 
 ## 安全注意事项
 

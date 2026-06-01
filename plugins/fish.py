@@ -4,4 +4,4 @@ from doraymon.context import BotContext
 
 
 def handle(context: BotContext) -> str:
-    return "钓鱼系统待迁移。后续会接入 plugins/fish.py + storage/fish_store.py。"
+    return "钓鱼系统开发中。后续会接入 plugins/fish.py + storage/fish_store.py。"
