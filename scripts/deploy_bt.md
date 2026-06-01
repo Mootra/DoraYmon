@@ -43,9 +43,9 @@ DEEPSEEK_API_KEY=
 python main.py
 ```
 
-## 6. 宝塔进程守护管理器
+## 6. 配置进程守护
 
-配置如下：
+宝塔进程守护管理器配置：
 
 ```text
 名称：DoraYmon
@@ -55,6 +55,4 @@ python main.py
 
 ## 7. 域名说明
 
-这个 Bot 默认使用 botpy 长连接，不需要 Nginx 反向代理和域名。
-
-如果后续改成 Webhook 模式，再单独配置域名和 HTTPS。
+当前使用 `botpy` 长连接，不需要 Nginx 反向代理和域名。改成 Webhook 模式时，再配置域名和 HTTPS。

@@ -1,6 +1,6 @@
 # DoraYmon
 
-DoraYmon 是一个干净、独立、可维护、可部署 的 Python QQ Bot 项目骨架。它使用 `botpy` 接入 QQ Bot，默认使用 DeepSeek API 提供 LLM 能力，并预留插件、SQLite、日志和旧功能迁移空间。
+DoraYmon 是一个 Python QQ Bot 项目。它使用 `botpy` 接入 QQ Bot，命令按插件组织，聊天能力通过 DeepSeek API 提供。项目内置 SQLite 存储、日志、本地运行脚本和部署说明，方便把旧脚本逐步迁移成可维护的机器人功能。
 
 ## 项目结构
 
@@ -19,17 +19,32 @@ DoraYmon/
 └── docs/
 ```
 
-## 功能列表
+主要分层：
+
+- `main.py` 负责启动。
+- `doraymon/` 放客户端、路由、配置和日志。
+- `plugins/` 放具体命令。
+- `services/` 放外部服务调用。
+- `storage/` 放 SQLite 连接和数据读写。
+- `docs/` 放架构、部署和功能扩展说明。
+
+## 当前功能
 
 - QQ Bot 长连接启动
 - 命令路由
 - 插件式命令
 - DeepSeek `/chat`
 - SQLite 签到
-- 日志输出到控制台和 `logs/doraymon.log`
+- 控制台日志和 `logs/doraymon.log`
 - 本地运行脚本
 - 宝塔部署文档
 - GitHub 初始化文档
+
+## 学习和协作
+
+协作前请先查看本地私人说明 `docs/project_goal.private.md`，了解本项目偏好的教学式、小步推进方式。该文件由 `.gitignore` 忽略，不会提交到 Git。
+
+后续扩展私聊入口、长对话、私人记忆库、技能 Prompt 和联网搜索，可以按 [docs/learning_outline.md](docs/learning_outline.md) 逐步推进。
 
 ## 本地运行
 
@@ -58,9 +73,9 @@ nano .env
 python main.py
 ```
 
-缺少 QQBot 配置时，启动会提示填写 `QQBOT_APPID` 和 `QQBOT_SECRET`。
+如果没有填写 QQBot 配置，启动时会提示补充 `QQBOT_APPID` 和 `QQBOT_SECRET`。
 
-## .env 配置
+## 配置
 
 复制 `.env.example` 为 `.env`，至少填写：
 
@@ -70,12 +85,12 @@ QQBOT_SECRET=
 DEEPSEEK_API_KEY=
 ```
 
-完整配置：
+完整配置项：
 
 ```bash
 QQBOT_SANDBOX=true
 DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_TEMPERATURE=0.7
 BOT_COMMAND_PREFIX=/
 BOT_ADMIN_OPENIDS=
@@ -84,9 +99,9 @@ DATA_DIR=data
 LOG_DIR=logs
 ```
 
-`.env` 的优先级高于 `config.yaml`。仓库只提供 `config.example.yaml`，不会生成真实 `config.yaml`。
+`.env` 的优先级高于 `config.yaml`。仓库只提供 `config.example.yaml`，真实配置需要在本地创建。
 
-## DeepSeek API
+## DeepSeek
 
 `/chat` 命令会请求：
 
@@ -97,16 +112,16 @@ POST https://api.deepseek.com/chat/completions
 默认模型：
 
 ```bash
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_MODEL=deepseek-v4-flash
 ```
 
-需要推理模型时可改为：
+需要更强模型时，可以改为：
 
 ```bash
-DEEPSEEK_MODEL=deepseek-reasoner
+DEEPSEEK_MODEL=deepseek-v4-pro
 ```
 
-未配置 `DEEPSEEK_API_KEY` 时，只有 `/chat` 会返回：`DeepSeek API Key 未配置，请检查 .env。`
+未配置 `DEEPSEEK_API_KEY` 时，只有 `/chat` 会返回配置缺失提示。
 
 ## 初始命令
 
@@ -123,7 +138,7 @@ DEEPSEEK_MODEL=deepseek-reasoner
 /admin status
 ```
 
-普通群消息默认不会自动调用 DeepSeek，避免刷屏和消耗额度。
+普通群消息不会自动调用 DeepSeek，以免刷屏和消耗额度。
 
 ## 宝塔部署
 
@@ -145,7 +160,7 @@ nano .env
 python main.py
 ```
 
-宝塔进程守护管理器：
+宝塔进程守护管理器配置：
 
 ```text
 名称：DoraYmon
@@ -153,7 +168,7 @@ python main.py
 启动命令：/www/wwwroot/DoraYmon/venv/bin/python /www/wwwroot/DoraYmon/main.py
 ```
 
-默认不需要 Nginx 反向代理和域名。后续改 Webhook 模式时，再配置域名和 HTTPS。
+当前使用 `botpy` 长连接，不需要 Nginx 反向代理和域名。改成 Webhook 模式时，再配置域名和 HTTPS。
 
 ## GitHub 上传
 
@@ -172,7 +187,7 @@ git push -u origin main
 git status
 ```
 
-确认没有提交 `.env`、`config.yaml`、`*.db`、`logs/`、真实 API Key、QQBot 密钥、真实聊天记录和私有 skill。
+不要提交 `.env`、`config.yaml`、数据库、日志、真实 API Key、QQBot 密钥、真实聊天记录和私有 skill。
 
 ## 新增插件
 
@@ -192,7 +207,7 @@ git status
 | `llm_api.py` | `plugins/chat.py` + `services/deepseek_service.py` |
 | `img_upload.py` | `services/image_service.py` |
 | `skills/SKILL.md` | `skills/example_skill.md` |
-| `friend_text_compact.md` | 本地私有 skills 文件，不默认上传 GitHub |
+| `friend_text_compact.md` | 本地私有 skills 文件，不上传 GitHub |
 
 ## 安全注意事项
 
@@ -200,4 +215,4 @@ git status
 - 不提供读取 `.env`、`config.yaml`、密钥文件的 QQ 命令。
 - 管理员命令必须校验 `BOT_ADMIN_OPENIDS`。
 - 返回到 QQ 群的错误信息保持简短，不暴露堆栈和密钥。
-- `.env`、`config.yaml`、数据库、日志和私有技能默认不会上传 GitHub。
+- `.env`、`config.yaml`、数据库、日志和私有技能不上传 GitHub。

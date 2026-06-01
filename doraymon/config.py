@@ -66,7 +66,7 @@ class Settings:
     qqbot_sandbox: bool = True
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
-    deepseek_model: str = "deepseek-chat"
+    deepseek_model: str = "deepseek-v4-flash"
     deepseek_temperature: float = 0.7
     command_prefix: str = "/"
     admin_openids: list[str] = field(default_factory=list)
@@ -99,7 +99,7 @@ def load_settings() -> Settings:
         deepseek_base_url=str(
             _env_or_config("DEEPSEEK_BASE_URL", config, "deepseek.base_url", "https://api.deepseek.com")
         ).rstrip("/"),
-        deepseek_model=str(_env_or_config("DEEPSEEK_MODEL", config, "deepseek.model", "deepseek-chat")).strip(),
+        deepseek_model=str(_env_or_config("DEEPSEEK_MODEL", config, "deepseek.model", "deepseek-v4-flash")).strip(),
         deepseek_temperature=_to_float(
             _env_or_config("DEEPSEEK_TEMPERATURE", config, "deepseek.temperature", 0.7),
             0.7,

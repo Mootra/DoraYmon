@@ -56,7 +56,7 @@ cp .env.example .env
 nano .env
 ```
 
-填入：
+至少填写：
 
 ```bash
 QQBOT_APPID=
@@ -70,7 +70,7 @@ DEEPSEEK_API_KEY=
 python main.py
 ```
 
-宝塔进程守护管理器：
+宝塔进程守护管理器配置：
 
 ```text
 名称：DoraYmon
@@ -78,4 +78,4 @@ python main.py
 启动命令：/www/wwwroot/DoraYmon/venv/bin/python /www/wwwroot/DoraYmon/main.py
 ```
 
-这个 Bot 默认不需要 Nginx 反向代理和域名。如果后续改成 Webhook 模式，再单独配置域名和 HTTPS。
+当前使用 `botpy` 长连接，不需要 Nginx 反向代理和域名。改成 Webhook 模式时，再配置域名和 HTTPS。

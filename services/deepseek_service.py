@@ -20,7 +20,7 @@ class DeepSeekService:
 
         url = f"{self.settings.deepseek_base_url}/chat/completions"
         payload: dict[str, Any] = {
-            "model": self.settings.deepseek_model or "deepseek-chat",
+            "model": self.settings.deepseek_model or "deepseek-v4-flash",
             "messages": [
                 {
                     "role": "system",
@@ -51,5 +51,5 @@ class DeepSeekService:
             return "DeepSeek 响应格式异常，请稍后再试。"
 
 
-# 说明：如需使用 deepseek-v4-pro，可在 .env 中设置：
+# 说明：如需使用更强的 deepseek-v4-pro，可在 .env 中设置：
 # DEEPSEEK_MODEL=deepseek-v4-pro

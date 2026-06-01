@@ -11,13 +11,13 @@ git remote add origin <你的仓库地址>
 git push -u origin main
 ```
 
-提交前请检查：
+提交前检查：
 
 ```bash
 git status
 ```
 
-确认不要误提交：
+不要提交这些内容：
 
 - `.env`
 - `config.yaml`
