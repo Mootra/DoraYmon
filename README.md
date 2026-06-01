@@ -42,7 +42,7 @@ DoraYmon/
 
 ## 学习和协作
 
-协作前请先查看本地私人说明 `docs/project_goal.private.md`，了解本项目偏好的教学式、小步推进方式。该文件由 `.gitignore` 忽略，不会提交到 Git。
+协作前请先查看本地私人说明 `docs/private/project_goal.md`，了解本项目偏好的教学式、小步推进方式。`docs/private/` 由 `.gitignore` 忽略，不会提交到 Git。
 
 后续扩展私聊入口、长对话、私人记忆库、技能 Prompt 和联网搜索，可以按 [docs/learning_outline.md](docs/learning_outline.md) 逐步推进。
 
