@@ -6,7 +6,20 @@ import re
 from collections.abc import Awaitable, Callable
 
 from doraymon.context import BotContext
-from plugins import admin, chat, fish, fortune, help, pet, ping, sign_in, status, todo, weather
+from plugins import (
+    admin,
+    chat,
+    fish,
+    food,
+    fortune,
+    help,
+    pet,
+    ping,
+    sign_in,
+    status,
+    todo,
+    weather,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +35,7 @@ COMMANDS: dict[str, Handler] = {
     "今日运势": fortune.handle,
     "签到": sign_in.handle,
     "我的签到": sign_in.handle_my_sign,
+    "吃什么": food.handle,
     "fish": fish.handle,
     "pet": pet.handle,
     "todo": todo.handle,

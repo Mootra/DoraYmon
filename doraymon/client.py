@@ -10,7 +10,6 @@ from doraymon.config import Settings
 from doraymon.context import BotContext
 from doraymon.router import route_message
 
-
 logger = logging.getLogger(__name__)
 MAX_REPLY_LENGTH = 1800
 
@@ -25,6 +24,45 @@ class MyClient(botpy.Client):
 
     async def on_ready(self) -> None:
         logger.info("DoraYmon 已登录：%s", getattr(self.robot, "name", "unknown"))
+
+    async def on_c2c_message_create(self, message: Any) -> None:
+        await self._handle_private_message(message)
+
+    async def _handle_private_message(self, message: Any) -> None:
+        if self._is_from_self(message):
+            return
+
+        content = str(getattr(message, "content", "") or "").strip()
+        if not content:
+            return
+
+        if not content.startswith(self.settings.command_prefix):
+            content = f"{self.settings.command_prefix}chat {content}"
+
+        context = BotContext(
+            settings=self.settings,
+            started_at=self.started_at,
+            user_openid=self._get_user_openid(message),
+            group_openid="",
+            raw_content=content,
+            is_at_message=False,
+            message=message,
+        )
+
+        reply = await route_message(context)
+        if reply:
+            await self._send_private_reply(message, self._limit_reply(reply))
+
+    async def _send_private_reply(self, message: Any, content: str) -> None:
+        try:
+            await self.api.post_c2c_message(
+                openid=self._get_user_openid(message),
+                msg_type=0,
+                msg_id=getattr(message, "id", ""),
+                content=content,
+            )
+        except Exception:
+            logger.exception("发送私聊消息失败")
 
     async def on_group_at_message_create(self, message: Any) -> None:
         await self._handle_group_message(message, is_at_message=True)
@@ -70,13 +108,20 @@ class MyClient(botpy.Client):
 
     def _is_from_self(self, message: Any) -> bool:
         author = getattr(message, "author", None)
-        author_id = str(getattr(author, "member_openid", "") or getattr(author, "id", "") or "")
+        author_id = str(
+            getattr(author, "member_openid", "") or getattr(author, "id", "") or ""
+        )
         robot_openid = str(getattr(getattr(self, "robot", None), "id", "") or "")
         return bool(author_id and robot_openid and author_id == robot_openid)
 
     def _get_user_openid(self, message: Any) -> str:
         author = getattr(message, "author", None)
-        return str(getattr(author, "member_openid", "") or getattr(author, "id", "") or "")
+        return str(
+            getattr(author, "member_openid", "")
+            or getattr(author, "user_openid", "")
+            or getattr(author, "id", "")
+            or ""
+        )
 
     def _limit_reply(self, content: str) -> str:
         if len(content) <= MAX_REPLY_LENGTH:

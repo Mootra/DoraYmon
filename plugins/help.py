@@ -16,6 +16,7 @@ def handle(context: BotContext) -> str:
             f"{prefix}今日运势 - 运势功能占位",
             f"{prefix}签到 - 每日签到",
             f"{prefix}我的签到 - 查看签到统计",
+            f"{prefix}吃什么 今天很累 - 推荐一款适合当前状态的食物",
             f"{prefix}todo - 待办功能占位",
             f"{prefix}admin status - 管理员状态命令",
         ]
