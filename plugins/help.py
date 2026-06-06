@@ -17,6 +17,10 @@ def handle(context: BotContext) -> str:
             f"{prefix}签到 - 每日签到",
             f"{prefix}我的签到 - 查看签到统计",
             f"{prefix}吃什么 今天很累 - 推荐一款适合当前状态的食物",
+            "私聊也可以直接问：今晚吃什么",
+            f"{prefix}记住口味 我喜欢辣 - 保存明确提交的口味",
+            f"{prefix}我的口味 - 查看已保存的口味",
+            f"{prefix}忘记口味 我喜欢辣 - 删除一条口味",
             f"{prefix}todo - 待办功能占位",
             f"{prefix}admin status - 管理员状态命令",
         ]

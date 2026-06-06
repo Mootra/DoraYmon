@@ -94,6 +94,7 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_TEMPERATURE=0.7
 BOT_COMMAND_PREFIX=/
 BOT_ADMIN_OPENIDS=
+BOT_ENABLE_FOOD_NATURAL_TRIGGER=true
 LOG_LEVEL=INFO
 DATA_DIR=data
 LOG_DIR=logs
@@ -134,9 +135,15 @@ DEEPSEEK_MODEL=deepseek-v4-pro
 /今日运势
 /签到
 /我的签到
+/吃什么 今天很累
+/记住口味 我喜欢辣
+/我的口味
+/忘记口味 我喜欢辣
 /todo
 /admin status
 ```
+
+私聊可以直接说“今晚吃什么”或“外卖点什么”；群聊需要先 @ 机器人。未 @ 的普通群消息不会触发食物助手。
 
 普通群消息不会自动调用 DeepSeek，以免刷屏和消耗额度。
 

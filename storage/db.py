@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 from doraymon.config import load_settings
@@ -24,7 +25,7 @@ def get_connection(name: str) -> sqlite3.Connection:
 
 
 def init_all_tables() -> None:
-    with get_connection("doraymon") as connection:
+    with closing(get_connection("doraymon")) as connection:
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -55,6 +56,17 @@ def init_all_tables() -> None:
                 is_done INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS food_preferences (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_openid TEXT NOT NULL,
+                preference_text TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_openid, preference_text)
             )
             """
         )

@@ -29,6 +29,8 @@ class FoodConditions:
     flavors: tuple[str, ...]
     scenes: tuple[str, ...]
     desired_tags: tuple[str, ...]
+    remembered_flavors: tuple[str, ...] = ()
+    remembered_tags: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -120,20 +122,34 @@ def _match_labels(query: str, keyword_groups: dict[str, tuple[str, ...]]) -> tup
     )
 
 
-def parse_food_conditions(query: str) -> FoodConditions:
-    normalized = (query or "").strip().lower()
-    budget_match = re.search(r"(\d+)\s*(?:元)?\s*(?:以内|以下|左右)", normalized)
-    budget_max = int(budget_match.group(1)) if budget_match else None
-    flavors = list(_match_labels(normalized, FLAVOR_KEYWORDS))
+def _parse_flavors(query: str) -> tuple[str, ...]:
+    flavors = list(_match_labels(query, FLAVOR_KEYWORDS))
     if "不辣" in flavors:
         flavors = [flavor for flavor in flavors if flavor not in {"辣", "微辣"}]
+    return tuple(flavors)
+
+
+def parse_food_conditions(
+    query: str,
+    preferences: list[str] | tuple[str, ...] = (),
+) -> FoodConditions:
+    normalized = (query or "").strip().lower()
+    preference_query = " ".join(preferences).strip().lower()
+    budget_match = re.search(r"(\d+)\s*(?:元)?\s*(?:以内|以下|左右)", normalized)
+    budget_max = int(budget_match.group(1)) if budget_match else None
+    current_flavors = _parse_flavors(normalized)
+    remembered_flavors = _parse_flavors(preference_query)
+    current_tags = _match_labels(normalized, TAG_KEYWORDS)
+    remembered_tags = _match_labels(preference_query, TAG_KEYWORDS)
 
     return FoodConditions(
         budget_max=budget_max,
         moods=_match_labels(normalized, MOOD_KEYWORDS),
-        flavors=tuple(flavors),
+        flavors=current_flavors or remembered_flavors,
         scenes=_match_labels(normalized, SCENE_KEYWORDS),
-        desired_tags=_match_labels(normalized, TAG_KEYWORDS),
+        desired_tags=current_tags or remembered_tags,
+        remembered_flavors=remembered_flavors if not current_flavors else (),
+        remembered_tags=remembered_tags if not current_tags else (),
     )
 
 
@@ -164,11 +180,19 @@ def _build_reason(item: FoodItem, conditions: FoodConditions) -> str:
 
     matched_flavors = set(item.flavors) & set(conditions.flavors)
     if matched_flavors:
-        reasons.append(f"口味也符合你想要的{next(iter(matched_flavors))}")
+        matched_flavor = next(iter(matched_flavors))
+        if matched_flavor in conditions.remembered_flavors:
+            reasons.append(f"也符合你保存的{matched_flavor}口味")
+        else:
+            reasons.append(f"口味也符合你想要的{matched_flavor}")
 
     matched_tags = set(item.tags) & set(conditions.desired_tags)
     if matched_tags:
-        reasons.append(f"也符合你想要的{next(iter(matched_tags))}")
+        matched_tag = next(iter(matched_tags))
+        if matched_tag in conditions.remembered_tags:
+            reasons.append(f"也符合你保存的{matched_tag}偏好")
+        else:
+            reasons.append(f"也符合你想要的{matched_tag}")
 
     if conditions.budget_max is not None:
         reasons.append(f"通常能控制在{conditions.budget_max}元以内")
@@ -181,9 +205,10 @@ def _build_reason(item: FoodItem, conditions: FoodConditions) -> str:
 
 def recommend_food(
     query: str = "",
+    preferences: list[str] | tuple[str, ...] = (),
     catalog_path: Path = DEFAULT_CATALOG_PATH,
 ) -> FoodRecommendation:
-    conditions = parse_food_conditions(query)
+    conditions = parse_food_conditions(query, preferences)
     items = load_food_catalog(catalog_path)
 
     if conditions.budget_max is not None:

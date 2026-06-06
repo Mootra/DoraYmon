@@ -13,6 +13,9 @@ bot:
   command_prefix: "/"
   admin_openids: []
 
+food:
+  natural_trigger: true
+
 log:
   level: "INFO"
 

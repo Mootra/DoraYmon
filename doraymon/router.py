@@ -20,6 +20,7 @@ from plugins import (
     todo,
     weather,
 )
+from services.intent_service import FOOD_INTENT, detect_intent
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,9 @@ COMMANDS: dict[str, Handler] = {
     "签到": sign_in.handle,
     "我的签到": sign_in.handle_my_sign,
     "吃什么": food.handle,
+    "记住口味": food.handle_remember_preference,
+    "我的口味": food.handle_my_preferences,
+    "忘记口味": food.handle_forget_preference,
     "fish": fish.handle,
     "pet": pet.handle,
     "todo": todo.handle,
@@ -74,10 +78,54 @@ async def route_message(context: BotContext) -> str:
         return f"未知命令：/{command}\n发送 /help 查看可用命令。"
 
     try:
-        result = handler(context)
-        if inspect.isawaitable(result):
-            result = await result
-        return str(result or "").strip()
+        return await _run_handler(handler, context)
     except Exception:
         logger.exception("命令处理失败：%s", command)
         return "命令处理失败，请稍后再试。"
+
+
+async def route_natural_message(context: BotContext) -> str:
+    normalized = normalize_content(context.raw_content)
+    intent = detect_intent(normalized)
+    if intent is None:
+        return ""
+
+    if intent.name == FOOD_INTENT:
+        context.command = "吃什么"
+        context.args = normalized
+        try:
+            return await _run_handler(food.handle, context)
+        except Exception:
+            logger.exception("自然语言意图处理失败：%s", intent.name)
+            return "食物推荐处理失败，请稍后再试。"
+
+    return ""
+
+
+async def route_incoming_message(
+    context: BotContext,
+    fallback_command: str = "",
+) -> str:
+    normalized = normalize_content(context.raw_content)
+    prefix = context.settings.command_prefix
+
+    if normalized.startswith(prefix):
+        return await route_message(context)
+
+    if context.settings.food_natural_trigger_enabled:
+        natural_reply = await route_natural_message(context)
+        if natural_reply:
+            return natural_reply
+
+    if not fallback_command:
+        return ""
+
+    context.raw_content = f"{prefix}{fallback_command} {normalized}".strip()
+    return await route_message(context)
+
+
+async def _run_handler(handler: Handler, context: BotContext) -> str:
+    result = handler(context)
+    if inspect.isawaitable(result):
+        result = await result
+    return str(result or "").strip()

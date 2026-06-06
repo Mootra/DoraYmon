@@ -70,6 +70,7 @@ class Settings:
     deepseek_temperature: float = 0.7
     command_prefix: str = "/"
     admin_openids: list[str] = field(default_factory=list)
+    food_natural_trigger_enabled: bool = True
     log_level: str = "INFO"
     data_dir: str = "data"
     log_dir: str = "logs"
@@ -106,6 +107,14 @@ def load_settings() -> Settings:
         ),
         command_prefix=str(_env_or_config("BOT_COMMAND_PREFIX", config, "bot.command_prefix", "/")).strip() or "/",
         admin_openids=_to_openid_list(_env_or_config("BOT_ADMIN_OPENIDS", config, "bot.admin_openids", "")),
+        food_natural_trigger_enabled=_to_bool(
+            _env_or_config(
+                "BOT_ENABLE_FOOD_NATURAL_TRIGGER",
+                config,
+                "food.natural_trigger",
+                True,
+            )
+        ),
         log_level=str(_env_or_config("LOG_LEVEL", config, "log.level", "INFO")).strip() or "INFO",
         data_dir=str(_env_or_config("DATA_DIR", config, "paths.data_dir", "data")).strip() or "data",
         log_dir=str(_env_or_config("LOG_DIR", config, "paths.log_dir", "logs")).strip() or "logs",

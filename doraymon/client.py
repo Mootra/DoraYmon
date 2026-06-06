@@ -8,7 +8,7 @@ import botpy
 
 from doraymon.config import Settings
 from doraymon.context import BotContext
-from doraymon.router import route_message
+from doraymon.router import route_incoming_message
 
 logger = logging.getLogger(__name__)
 MAX_REPLY_LENGTH = 1800
@@ -36,9 +36,6 @@ class MyClient(botpy.Client):
         if not content:
             return
 
-        if not content.startswith(self.settings.command_prefix):
-            content = f"{self.settings.command_prefix}chat {content}"
-
         context = BotContext(
             settings=self.settings,
             started_at=self.started_at,
@@ -49,7 +46,7 @@ class MyClient(botpy.Client):
             message=message,
         )
 
-        reply = await route_message(context)
+        reply = await route_incoming_message(context, fallback_command="chat")
         if reply:
             await self._send_private_reply(message, self._limit_reply(reply))
 
@@ -91,7 +88,7 @@ class MyClient(botpy.Client):
             message=message,
         )
 
-        reply = await route_message(context)
+        reply = await route_incoming_message(context)
         if reply:
             await self._send_group_reply(message, self._limit_reply(reply))
 

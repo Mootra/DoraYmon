@@ -23,12 +23,16 @@ doraymon/client.py
   ↓
 doraymon/router.py
   ↓
+显式命令或 services/intent_service.py
+  ↓
 plugins/
   ↓
 services/ 或 storage/
   ↓
 返回文本给 QQ
 ```
+
+私聊普通消息会先经过意图识别。明确的用餐决策表达会进入吃什么插件，其他内容回退到 `/chat`。群聊只有显式命令或 @ 机器人时才进入这条流程，未 @ 的普通群消息不会自动触发插件。
 
 ## 扩展原则
 

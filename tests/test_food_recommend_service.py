@@ -30,6 +30,19 @@ class FoodRecommendServiceTest(unittest.TestCase):
         self.assertIn("不辣", conditions.flavors)
         self.assertNotIn("辣", conditions.flavors)
 
+    def test_saved_preference_is_used_when_query_has_no_flavor(self) -> None:
+        result = recommend_food("今天吃晚饭", ["我喜欢辣"])
+
+        self.assertIn(result.food_name, {"砂锅米线", "麻辣烫", "小火锅"})
+        self.assertIn("保存的辣口味", result.reason)
+
+    def test_current_flavor_overrides_saved_preference(self) -> None:
+        conditions = parse_food_conditions("今天想吃清淡的", ["我喜欢辣"])
+
+        self.assertIn("清淡", conditions.flavors)
+        self.assertNotIn("辣", conditions.flavors)
+        self.assertEqual(conditions.remembered_flavors, ())
+
     def test_low_budget_still_returns_affordable_food(self) -> None:
         result = recommend_food("15以内")
 
