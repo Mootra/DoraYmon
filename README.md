@@ -53,49 +53,152 @@ DoraYmon/
 
 RAG 评测、Embedding 和混合检索的后续路线见 [docs/learning_outline.md](docs/learning_outline.md)。
 
-## 本地运行
+## 从零搭建
 
-```bash
+### 第一步：在 QQ 开放平台创建机器人
+
+1. 打开 [QQ 开放平台](https://q.qq.com/)，使用手机 QQ 扫码注册或登录。
+2. 进入机器人管理页面，按照页面引导创建一个 QQ 机器人。
+3. 在机器人的开发设置中复制 `AppID` 和 `AppSecret`。
+4. 根据开放平台当前页面配置测试范围、测试成员或群聊，并确认机器人处于可测试状态。
+
+> `AppSecret` 是敏感凭证，离开页面后通常不能再次明文查看，只能重置。不要把它发到群聊、截图、日志或提交到 GitHub。
+
+机器人创建后可能会立即出现在 QQ 消息列表中。在 DoraYmon 服务启动前，向它发送消息出现“机器人去火星了”之类的离线提示属于正常现象。
+
+### 第二步：准备代码和 Python
+
+需要 Python 3.10 或更高版本。首次使用先克隆仓库并进入项目目录：
+
+```powershell
+git clone https://github.com/Mootra/DoraYmon.git
 cd DoraYmon
-python -m venv .venv
+python --version
 ```
+
+如果已经下载了项目，只需进入包含 `main.py` 和 `requirements.txt` 的目录。
+
+### 第三步：创建虚拟环境并安装依赖
 
 Windows PowerShell：
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-copy .env.example .env
-notepad .env
-python main.py
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+Copy-Item .env.example .env
 ```
 
 Linux/macOS：
 
 ```bash
-source .venv/bin/activate
-pip install -r requirements.txt
+python3 -m venv .venv
+./.venv/bin/python -m pip install -r requirements.txt
 cp .env.example .env
-nano .env
-python main.py
 ```
 
-如果没有填写 QQBot 配置，启动时会提示补充 `QQBOT_APPID` 和 `QQBOT_SECRET`。
+### 第四步：填写 QQ Bot 配置
 
-## 配置
+打开刚创建的 `.env`。Windows 可以使用：
 
-复制 `.env.example` 为 `.env`，至少填写：
+```powershell
+notepad .env
+```
+
+Linux/macOS 可以使用：
+
+```bash
+nano .env
+```
+
+先填写从 QQ 开放平台取得的两个必填项：
+
+```bash
+QQBOT_APPID=你的 AppID
+QQBOT_SECRET=你的 AppSecret
+QQBOT_SANDBOX=true
+```
+
+- 在开放平台沙箱或测试环境调试时使用 `QQBOT_SANDBOX=true`。
+- 切换到开放平台正式环境后改为 `QQBOT_SANDBOX=false`。
+- `.env` 已被 Git 忽略，不要把真实凭证写进 `.env.example` 或 `config.example.yaml`。
+
+`DEEPSEEK_API_KEY` 不是连接 QQ 的必填项；不配置时 `/ping`、`/help`、签到等本地命令仍可使用，但 AI 对话和 RAG 生成回答不可用。
+
+### 第五步：启动 DoraYmon
+
+Windows：
+
+```powershell
+.\.venv\Scripts\python.exe main.py
+```
+
+也可以双击 `start.bat`，或在 PowerShell 中运行 `scripts/run_local.ps1`。启动脚本会自动创建虚拟环境、安装或更新依赖，并在缺少 `.env` 时复制示例配置。
+
+Linux/macOS：
+
+```bash
+./.venv/bin/python main.py
+```
+
+看到类似下面的日志表示 QQ 长连接已经建立：
+
+```text
+DoraYmon 已登录：机器人名称
+```
+
+如果启动时提示 QQBot 配置缺失，请检查 `.env` 中的 `QQBOT_APPID` 和 `QQBOT_SECRET`，以及等号后是否混入空格或引号。
+
+### 第六步：在 QQ 中验证
+
+1. 打开 QQ，找到刚创建的机器人。
+2. 私聊发送 `/ping`，预期返回 `pong`。
+3. 发送 `/status` 查看运行模式，再发送 `/help` 查看命令列表。
+4. 群聊测试时先把机器人加入开放平台允许的测试群，并在消息中 @ 机器人；未 @ 且不是显式命令的群消息默认不会触发回复。
+
+如果机器人没有回复，按顺序检查：本地进程是否仍在运行、AppID/AppSecret 是否正确、`QQBOT_SANDBOX` 是否与开放平台环境一致、当前 QQ 用户或群是否在测试范围内，以及 `logs/doraymon.log` 中的错误。
+
+### 第七步：开启 DeepSeek 对话和短期上下文（可选）
+
+在 `.env` 中填写：
+
+```bash
+DEEPSEEK_API_KEY=你的 DeepSeek API Key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+```
+
+重启后先发送 `/chat 你好`。确认单轮对话正常，再按需开启短期上下文：
+
+```bash
+BOT_ENABLE_CHAT_HISTORY=true
+BOT_CHAT_HISTORY_LIMIT=10
+BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+```
+
+### 第八步：建立本地知识库（可选）
+
+1. 把 UTF-8 Markdown/TXT 放入 `resources/knowledge/`。
+2. Windows 运行 `.\.venv\Scripts\python.exe scripts\index_knowledge.py`；Linux/macOS 运行 `./.venv/bin/python scripts/index_knowledge.py`。
+3. 在 `.env` 中设置 `BOT_ENABLE_RAG=true`。
+4. 重启机器人，通过 `/知识库状态` 和 `/知识问 如何在本地启动项目` 验证。
+
+## 配置参考
+
+最小 QQ 连接配置：
 
 ```bash
 QQBOT_APPID=
 QQBOT_SECRET=
-DEEPSEEK_API_KEY=
+QQBOT_SANDBOX=true
 ```
 
 完整配置项：
 
 ```bash
+QQBOT_APPID=
+QQBOT_SECRET=
 QQBOT_SANDBOX=true
+DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_TEMPERATURE=0.7
