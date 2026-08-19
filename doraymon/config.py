@@ -53,6 +53,13 @@ def _to_float(value: Any, default: float) -> float:
         return default
 
 
+def _to_int(value: Any, default: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _to_openid_list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [str(item).strip() for item in value if str(item).strip()]
@@ -71,6 +78,9 @@ class Settings:
     command_prefix: str = "/"
     admin_openids: list[str] = field(default_factory=list)
     food_natural_trigger_enabled: bool = True
+    chat_history_enabled: bool = False
+    chat_history_limit: int = 10
+    chat_history_max_content_length: int = 1000
     log_level: str = "INFO"
     data_dir: str = "data"
     log_dir: str = "logs"
@@ -114,6 +124,27 @@ def load_settings() -> Settings:
                 "food.natural_trigger",
                 True,
             )
+        ),
+        chat_history_enabled=_to_bool(
+            _env_or_config(
+                "BOT_ENABLE_CHAT_HISTORY",
+                config,
+                "chat.history_enabled",
+                False,
+            )
+        ),
+        chat_history_limit=_to_int(
+            _env_or_config("BOT_CHAT_HISTORY_LIMIT", config, "chat.history_limit", 10),
+            10,
+        ),
+        chat_history_max_content_length=_to_int(
+            _env_or_config(
+                "BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH",
+                config,
+                "chat.history_max_content_length",
+                1000,
+            ),
+            1000,
         ),
         log_level=str(_env_or_config("LOG_LEVEL", config, "log.level", "INFO")).strip() or "INFO",
         data_dir=str(_env_or_config("DATA_DIR", config, "paths.data_dir", "data")).strip() or "data",

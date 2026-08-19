@@ -64,6 +64,16 @@ QQBOT_SECRET=
 DEEPSEEK_API_KEY=
 ```
 
+短期上下文默认关闭。如需开启，可在 `.env` 中设置：
+
+```bash
+BOT_ENABLE_CHAT_HISTORY=true
+BOT_CHAT_HISTORY_LIMIT=10
+BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+```
+
+开启后，运行数据写入本地 SQLite；部署和备份时不要提交或公开真实数据库及聊天记录。
+
 测试运行：
 
 ```bash

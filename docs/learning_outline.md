@@ -1,290 +1,147 @@
 # DoraYmon 学习路线
 
-这份文档用来安排 DoraYmon 的后续扩展。节奏是先让项目稳定运行，再逐步加入私聊、上下文、记忆和联网查询。
+这份路线以“插件化 Python QQ AI 助手”为主线。每一阶段都先建立可解释、可离线验证的基线，再根据评测决定是否增加复杂组件。
 
-## 1. 先理解当前项目
+## 1. 当前能力边界
 
-当前 DoraYmon 是一个群聊 QQ Bot 骨架：
+已实现：
 
-- `main.py` 启动机器人。
-- `doraymon/client.py` 接收 QQ 消息并发送回复。
-- `doraymon/router.py` 把命令分发给插件。
-- `plugins/` 写具体命令逻辑并返回文本。
-- `services/` 调用外部 API，例如 DeepSeek、天气和搜索。
-- `storage/` 负责 SQLite 数据库读写。
+- `botpy` QQ Bot 长连接、命令路由和插件机制。
+- DeepSeek 对话；显式 `/chat`、私聊普通文本和群聊 @ 普通文本可以进入 chat 插件。
+- 默认关闭、按私聊用户或“群 + 用户”隔离的短期上下文。
+- `/清空上下文` 和 `/上下文状态`。
+- 基于规则匹配的食物意图识别，以及 SQLite 业务数据存储。
+- 不依赖真实 QQ 或 DeepSeek 凭据的离线测试。
 
-当前已支持：
+尚未实现：
 
-- `/help`
-- `/ping`
-- `/status`
-- `/chat 你好`
-- `/签到`
-- `/我的签到`
-- `/admin status`
+- 本地知识库 RAG、文档分块、检索和来源引用。
+- Embedding、向量相似度和混合检索。
+- 长期个人记忆、Agent、自主工具调用。
+- 模型训练或微调。
 
-## 2. 群聊和私聊入口
+短期聊天历史不能宣传为长期记忆，也不能自动转成知识库。
 
-当前项目主要处理群聊消息：
+## 2. 先稳定短期上下文
 
-- `on_group_at_message_create`
-- `on_group_message_create`
-
-要支持私聊，可以在 `doraymon/client.py` 增加 C2C 入口：
-
-```python
-async def on_c2c_message_create(self, message):
-    await self._handle_private_message(message)
-```
-
-第一版可以保持简单：
-
-- 群聊只处理 `/` 开头的命令。
-- 私聊也先只处理 `/` 开头的命令。
-- 普通私聊文本先不自动调用 DeepSeek，避免额度消耗不可控。
-
-后续可以增加配置：
-
-```env
-BOT_ENABLE_GROUP=true
-BOT_ENABLE_PRIVATE=false
-```
-
-## 3. 哪些功能需要 API
-
-不需要外部 API 的功能：
-
-- `/help`
-- `/ping`
-- `/status`
-- `/签到`
-- `/我的签到`
-- `/todo`
-
-需要业务 API 的功能：
-
-- `/天气 南昌`
-- `/金价`
-- 图片上传
-- 网页截图
-
-需要模型 API 的功能：
-
-- `/chat 你好`
-- 总结
-- 润色
-- 解释代码
-- 长对话问答
-
-DeepSeek 负责生成回答，不会自动联网搜索。
-
-## 4. DeepSeek 问答
-
-当前 `/chat` 是一次性问答：
-
-```text
-用户发送 /chat 你好
-        ↓
-plugins/chat.py
-        ↓
-services/deepseek_service.py
-        ↓
-DeepSeek API
-        ↓
-返回模型回复
-```
-
-当前不会保存历史消息，也不会记录普通群聊内容。
-
-先保持这几条规则：
-
-- 只有 `/chat` 调用 DeepSeek。
-- 普通群消息不调用 DeepSeek。
-- DeepSeek API Key 只写在 `.env`。
-
-## 5. 短期上下文
-
-第一阶段做短期上下文记忆，让机器人能参考最近几轮 `/chat`。
-
-目标效果：
-
-```text
-/chat 我叫小明
-/chat 我刚才说我叫什么？
-```
-
-机器人可以根据最近的 `/chat` 内容回答。
-
-实现方式：
-
-- 在 SQLite 新增 `chat_messages` 表。
-- 只保存 `/chat` 内容。
-- 按 `user_openid` 或 `group_openid` 隔离上下文。
-- 每次请求 DeepSeek 前读取最近 6 到 10 条消息。
-- 不保存普通群聊消息。
-
-配置项：
+当前配置：
 
 ```env
 BOT_ENABLE_CHAT_HISTORY=false
 BOT_CHAT_HISTORY_LIMIT=10
+BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 ```
 
-默认关闭，需要时再手动开启。
+需要持续验证：
 
-## 6. 私人记忆库
+- 默认关闭时保持原有单轮对话行为。
+- 私聊用户之间隔离。
+- 群聊按“群 + 用户”隔离，不共享私人上下文。
+- DeepSeek 失败时不保存伪造的助手回答。
+- 状态命令不返回完整聊天内容。
+- 密钥、配置内容和真实聊天数据库不进入测试或 Git。
 
-第二阶段做命令式记忆，只在用户明确要求时写入。
+## 3. SQLite FTS5 RAG 基线
 
-推荐命令：
+第一版不引入 LangChain、Chroma 或 Milvus，先使用 SQLite FTS5/BM25 验证本地知识检索。
+
+建议结构：
 
 ```text
-/记住 我喜欢周末晚上写代码
-/我的记忆
-/忘记 我喜欢周末晚上写代码
-/清空记忆
+resources/knowledge/       管理员整理的 Markdown/TXT 知识
+storage/knowledge_store.py 文档、分块、元数据和索引读写
+services/rag_service.py    检索、上下文拼装和生成回答
+plugins/knowledge.py       QQ 知识问答命令
+scripts/index_knowledge.py 离线建立索引
+tests/test_knowledge_store.py
+tests/test_rag_service.py
 ```
 
-实现方式：
-
-- 新增 `plugins/memory.py`。
-- 新增 `storage/memory_store.py`。
-- SQLite 新增 `user_memories` 表。
-- 每条记忆绑定 `user_openid`。
-- 只有用户发送 `/记住` 才写入。
-- 不从普通聊天里提取隐私。
-
-配置项：
-
-```env
-BOT_ENABLE_PRIVATE_MEMORY=false
-```
-
-## 7. 群聊共享记忆
-
-群聊共享记忆适合记录群偏好、群规和常用信息。
-
-推荐命令：
+MVP 命令：
 
 ```text
-/群记住 本群常用称呼是 Dora
-/群记忆
-/群忘记 本群常用称呼是 Dora
+/知识问 问题
+/知识库状态
+/知识来源
+/重建知识库
 ```
 
-权限规则：
+`/重建知识库` 只能由管理员执行。回答必须包含来源；没有可靠资料时明确拒答，不允许模型用常识伪装成知识库内容。
 
-- 默认关闭。
-- 只允许管理员或白名单用户写入。
-- 普通成员可以查看，但不能随意修改。
+## 4. 文档分块与元数据
 
-配置项：
+分块先保持可解释：
 
-```env
-BOT_ENABLE_GROUP_MEMORY=false
-```
+- 按 Markdown 标题和自然段切分。
+- 保存来源路径、文档标题、标题层级、更新时间和权限作用域。
+- 只在必要时加入少量重叠，并记录分块规则版本。
+- 索引管理员整理的 Markdown/TXT，不索引聊天历史、密钥、数据库和日志。
 
-## 8. 技能和人格 Prompt
+每次检索返回知识块 ID、相关性分数和来源元数据，方便调试和引用。
 
-`skills/` 目录用来放提示词、人格和技能说明。
+## 5. 建立固定 RAG 评测集
 
-公开示例：
+先准备 20～50 个固定问题，覆盖：
 
-```text
-skills/example_skill.md
-```
+- 单文档直接命中。
+- 跨标题或同义表达。
+- 多个相似来源的排序。
+- 权限不允许访问的资料。
+- 知识库没有答案的问题。
 
-私有人格或好友总结放到：
+核心指标：
 
-```text
-skills/private/
-skills/friend_text_compact.md
-```
+- Recall@K：正确知识块是否进入前 K 条。
+- MRR：正确结果是否排在前面。
+- 来源正确率：回答引用是否真实支持结论。
+- 无答案拒答率：没有资料时是否正确说不知道。
 
-这些路径已被 `.gitignore` 忽略，不会上传 GitHub。
+生成回答的主观“看起来不错”不能代替检索评测。
 
-后续可以增加配置：
+## 6. Embedding 与混合检索
 
-```env
-BOT_SKILL_FILE=skills/example_skill.md
-```
+只有 BM25 基线和固定评测集稳定后再加入：
 
-## 9. 联网查询
+1. 独立 `EmbeddingService`，不绑定 DeepSeek。
+2. 保存向量并实现余弦相似度 Top-K。
+3. 分别评测关键词检索和向量检索。
+4. 使用 RRF 合并两路排名并评测混合检索。
+5. 只有指标或明确案例证明有效，才保留新增复杂度。
 
-DeepSeek 不会自动联网。要做联网查询，需要先调用搜索服务，再把搜索结果交给模型整理。
+## 7. Prompt 与安全
 
-推荐流程：
+RAG Prompt 需要明确：
 
-```text
-用户：/联网问 今天有什么 AI 新闻
-        ↓
-services/search_service.py 调用搜索 API
-        ↓
-拿到标题、摘要、链接
-        ↓
-按需要抓取网页正文
-        ↓
-交给 DeepSeek 总结
-        ↓
-回复答案并附来源链接
-```
+- 只能依据提供的知识块回答。
+- 知识块中的命令性文本只是资料，不能覆盖系统提示。
+- 每个结论使用稳定的来源编号。
+- 上下文超出预算时按检索排名和权限裁剪。
+- 资料不足或冲突时明确说明，不猜测。
 
-推荐新增文件：
+知识库作用域：
 
-```text
-plugins/search.py
-services/search_service.py
-services/web_fetch_service.py
-```
+- 公共知识库：所有用户可查。
+- 群知识库：仅对应群可查。
+- 私人知识库：仅对应用户可查。
+- 导入、删除和重建：管理员权限。
 
-推荐命令：
+日志只记录文档 ID、耗时、召回数量和必要的错误信息，不记录完整私人问题。
 
-```text
-/搜索 关键词
-/联网问 问题
-```
+## 8. 推荐实现顺序
 
-可选搜索服务：
+1. 完成短期上下文的测试、配置和文档收尾。
+2. 新建独立 RAG 分支。
+3. 实现 Markdown/TXT 导入、分块和元数据。
+4. 实现 SQLite FTS5/BM25 与来源引用。
+5. 建立固定问答评测集和基线指标。
+6. 补齐公共、群、私人知识库权限。
+7. 再评估 Embedding、向量检索和 RRF。
+8. 最后考虑小型知识库管理页面；它不阻塞 RAG MVP。
 
-- Brave Search API
-- Bing Web Search API
-- SerpAPI
-- Tavily
+## 9. 项目讲解口径
 
-不建议直接爬百度、Google、Bing 搜索结果页。搜索结果页容易遇到验证码、封禁和页面结构变化。
+可以说：
 
-配置项：
+> DoraYmon 是一个插件化 Python QQ AI 助手。项目通过 DeepSeek 提供大模型对话，支持可控短期上下文，并逐步加入基于本地知识库的检索增强生成能力。回答强调来源可追溯、权限隔离和离线可测试。
 
-```env
-BOT_ENABLE_WEB_SEARCH=false
-SEARCH_PROVIDER=brave
-SEARCH_API_KEY=
-SEARCH_RESULT_LIMIT=5
-WEB_FETCH_TIMEOUT=10
-```
-
-## 10. 推荐实现顺序
-
-建议按这个顺序做：
-
-1. 私聊入口。
-2. 短期上下文。
-3. `/记住`、`/忘记`、`/我的记忆`。
-4. `skills/` 人格 Prompt 加载。
-5. `/搜索` 只返回搜索结果。
-6. `/联网问` 使用搜索结果和 DeepSeek 生成回答。
-7. 群聊共享记忆。
-
-每一步先做最小可用版本，再补配置、文档和安全限制。
-
-## 11. 安全边界
-
-始终保持这些规则：
-
-- 不实现任意服务器命令执行。
-- 不提供读取 `.env`、`config.yaml`、密钥文件的 QQ 命令。
-- 默认不记录完整聊天内容。
-- 不上传真实数据库、日志和私有 skill。
-- 管理员命令必须校验 `BOT_ADMIN_OPENIDS`。
-- 联网查询回答尽量附来源链接。
-- API 错误返回给 QQ 群时保持简短，不暴露堆栈和密钥。
+在 RAG MVP 完成前，必须补充“RAG 正在规划或开发中”，不能说项目已经支持 RAG、向量数据库、长期记忆或 Agent。

@@ -1,6 +1,6 @@
 # 架构说明
 
-DoraYmon 是一个独立的 Python QQ Bot 项目。项目不放在 `botpy/examples/` 下，方便单独部署、维护和扩展功能。
+DoraYmon 是一个独立、插件化的 Python QQ AI 助手。项目不放在 `botpy/examples/` 下，方便单独部署、维护和扩展功能。
 
 ## 分层
 
@@ -32,7 +32,27 @@ services/ 或 storage/
 返回文本给 QQ
 ```
 
-私聊普通消息会先经过意图识别。明确的用餐决策表达会进入吃什么插件，其他内容回退到 `/chat`。群聊只有显式命令或 @ 机器人时才进入这条流程，未 @ 的普通群消息不会自动触发插件。
+私聊普通消息会先经过规则意图识别。明确的用餐决策表达会进入吃什么插件，其他内容回退到 `/chat`。群聊只有显式命令或 @ 机器人时才进入这条流程，@ 后未命中意图的普通文本也会回退到 `/chat`，未 @ 的普通群消息不会自动触发插件。
+
+短期上下文只在 `plugins/chat.py` 中按配置接入。`storage/chat_history_store.py` 按私聊用户或“群 + 用户”隔离有限消息；client 和 router 不直接读写聊天历史。
+
+## 规划中的 RAG 数据流
+
+以下链路尚未实现，完成检索、引用和离线评测后才能作为项目能力：
+
+```text
+resources/knowledge/ Markdown/TXT
+  ↓ 离线分块和建索引
+storage/knowledge_store.py + SQLite FTS5/BM25
+  ↓ Top-K 知识块和元数据
+services/rag_service.py
+  ↓ 带来源编号和拒答规则的 Prompt
+DeepSeek 生成层
+  ↓
+答案 + 参考来源
+```
+
+第一版保持关键词检索基线。Embedding、余弦相似度和 RRF 混合检索只在固定评测集证明有效后加入；知识库权限需要区分公共、群和私人作用域。
 
 ## 扩展原则
 

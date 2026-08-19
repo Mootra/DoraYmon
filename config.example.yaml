@@ -16,6 +16,11 @@ bot:
 food:
   natural_trigger: true
 
+chat:
+  history_enabled: false
+  history_limit: 10
+  history_max_content_length: 1000
+
 log:
   level: "INFO"
 

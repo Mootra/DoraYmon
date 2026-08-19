@@ -96,19 +96,54 @@ class AIProjectContextTest(unittest.TestCase):
         food_mock.assert_called_once_with(context)
         chat_handler.assert_not_called()
 
-    def test_short_term_context_storage_exists_but_is_not_wired_to_chat(self) -> None:
+    def test_short_term_context_is_wired_only_to_chat_plugin(self) -> None:
         content = (PROJECT_ROOT / "docs" / "ai_project_context.md").read_text(
             encoding="utf-8"
         )
         chat_history_store = PROJECT_ROOT / "storage" / "chat_history_store.py"
         chat_plugin = (PROJECT_ROOT / "plugins" / "chat.py").read_text(encoding="utf-8")
         router = (PROJECT_ROOT / "doraymon" / "router.py").read_text(encoding="utf-8")
+        client = (PROJECT_ROOT / "doraymon" / "client.py").read_text(encoding="utf-8")
 
         self.assertTrue(chat_history_store.exists())
-        self.assertNotIn("chat_history_store", chat_plugin)
+        self.assertIn("chat_history_store", chat_plugin)
+        self.assertIn("chat_history_enabled", chat_plugin)
+        self.assertNotIn("chat_history_store", client)
         self.assertNotIn("chat_history_store", router)
-        self.assertIn("/chat` 通过 DeepSeek 服务完成单轮问答", content)
+        self.assertIn("可控短期上下文", content)
+        self.assertIn("RAG、Embedding、长期个人记忆和 Agent 尚未实现", content)
         self.assertIn("不实现无限聊天记录", content)
+
+    def test_chat_history_commands_and_config_are_documented(self) -> None:
+        readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+        commands = (PROJECT_ROOT / "docs" / "commands.md").read_text(encoding="utf-8")
+        env_example = (PROJECT_ROOT / ".env.example").read_text(encoding="utf-8")
+        yaml_example = (PROJECT_ROOT / "config.example.yaml").read_text(encoding="utf-8")
+        help_source = (PROJECT_ROOT / "plugins" / "help.py").read_text(encoding="utf-8")
+
+        for command in ("清空上下文", "上下文状态"):
+            with self.subTest(command=command):
+                self.assertIn(command, COMMANDS)
+                self.assertIn(f"/{command}", readme)
+                self.assertIn(f"/{command}", commands)
+                self.assertIn(command, help_source)
+
+        for env_name in (
+            "BOT_ENABLE_CHAT_HISTORY",
+            "BOT_CHAT_HISTORY_LIMIT",
+            "BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH",
+        ):
+            with self.subTest(env_name=env_name):
+                self.assertIn(env_name, readme)
+                self.assertIn(env_name, env_example)
+
+        for yaml_key in (
+            "history_enabled:",
+            "history_limit:",
+            "history_max_content_length:",
+        ):
+            with self.subTest(yaml_key=yaml_key):
+                self.assertIn(yaml_key, yaml_example)
 
     def test_test_file_does_not_read_real_secret_files(self) -> None:
         source = Path(__file__).read_text(encoding="utf-8")

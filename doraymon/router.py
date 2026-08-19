@@ -32,6 +32,8 @@ COMMANDS: dict[str, Handler] = {
     "ping": ping.handle,
     "status": status.handle,
     "chat": chat.handle,
+    "清空上下文": chat.handle_clear_context,
+    "上下文状态": chat.handle_context_status,
     "天气": weather.handle,
     "今日运势": fortune.handle,
     "签到": sign_in.handle,
@@ -116,6 +118,9 @@ async def route_incoming_message(
         natural_reply = await route_natural_message(context)
         if natural_reply:
             return natural_reply
+
+    if not fallback_command and context.is_at_message:
+        fallback_command = "chat"
 
     if not fallback_command:
         return ""

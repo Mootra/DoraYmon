@@ -1,6 +1,6 @@
 # DeepSeek 配置
 
-DoraYmon 使用 DeepSeek API 处理 `/chat` 命令。普通群消息不会自动触发模型请求。
+DoraYmon 使用 DeepSeek API 作为回答生成层。显式 `/chat`、私聊普通文本以及群聊 @ 后未命中规则意图的普通文本会进入 chat 插件；未 @ 且不是显式命令的群消息不会触发模型请求。
 
 ## 配置项
 
@@ -21,6 +21,20 @@ POST https://api.deepseek.com/chat/completions
 
 请求格式使用 OpenAI-compatible chat completions 格式。
 
+## 短期上下文
+
+默认情况下，chat 插件发送单轮请求。需要近期对话时可显式开启：
+
+```bash
+BOT_ENABLE_CHAT_HISTORY=true
+BOT_CHAT_HISTORY_LIMIT=10
+BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+```
+
+历史按私聊用户或“群 + 用户”隔离。`/上下文状态` 只显示开关、会话类型、消息数和读取上限；`/清空上下文` 只清理当前会话。聊天历史不会自动成为知识库或长期记忆。
+
+DeepSeek 在当前项目中只负责生成回答。项目尚未实现文档检索、来源引用、Embedding 或向量检索，因此不能把现有聊天能力称为 RAG。
+
 ## 更强模型
 
 需要更强模型时，可以把模型改为：
@@ -33,6 +47,6 @@ DEEPSEEK_MODEL=deepseek-v4-pro
 
 ## 安全
 
-- 未配置 `DEEPSEEK_API_KEY` 时，只有 `/chat` 会返回配置缺失提示。
+- 未配置 `DEEPSEEK_API_KEY` 时，进入 AI 聊天的消息会返回配置缺失提示。
 - API 请求失败时，只向 QQ 群返回简短错误。
 - 不把完整请求头、API Key 或堆栈信息发到 QQ 群。

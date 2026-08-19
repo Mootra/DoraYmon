@@ -1,6 +1,8 @@
 # DoraYmon
 
-DoraYmon 是一个 Python QQ Bot 项目。它使用 `botpy` 接入 QQ Bot，命令按插件组织，聊天能力通过 DeepSeek API 提供。项目内置 SQLite 存储、日志、本地运行脚本和部署说明，方便持续扩展机器人功能。
+DoraYmon 是一个插件化的 Python QQ AI 助手。它使用 `botpy` 接入 QQ Bot，通过 DeepSeek 提供大模型对话，支持默认关闭、按会话隔离的可控短期上下文，并保留轻量的 SQLite 存储和离线测试能力。
+
+当前项目没有实现 RAG、Embedding、向量检索、长期个人记忆或 Agent。下一阶段计划先用 SQLite FTS5 建立带来源引用、可离线评测的本地知识库 RAG 基线。
 
 ## 项目结构
 
@@ -33,7 +35,9 @@ DoraYmon/
 - QQ Bot 长连接启动
 - 命令路由
 - 插件式命令
-- DeepSeek `/chat`
+- DeepSeek 对话：显式 `/chat`、私聊普通文本、群聊 @ 普通文本
+- 可选短期上下文：默认关闭，支持查询状态和按当前会话清空
+- 规则式食物意图识别（不是 AI 分类模型）
 - SQLite 签到
 - 控制台日志和 `logs/doraymon.log`
 - 本地运行脚本
@@ -44,7 +48,7 @@ DoraYmon/
 
 协作前请先查看本地私人说明 `docs/private/project_goal.md`，了解本项目偏好的教学式、小步推进方式。`docs/private/` 由 `.gitignore` 忽略，不会提交到 Git。
 
-后续扩展私聊入口、长对话、私人记忆库、技能 Prompt 和联网搜索，可以按 [docs/learning_outline.md](docs/learning_outline.md) 逐步推进。
+短期上下文之后的本地知识库 RAG、检索评测、Embedding 和混合检索路线见 [docs/learning_outline.md](docs/learning_outline.md)。
 
 ## 本地运行
 
@@ -95,6 +99,9 @@ DEEPSEEK_TEMPERATURE=0.7
 BOT_COMMAND_PREFIX=/
 BOT_ADMIN_OPENIDS=
 BOT_ENABLE_FOOD_NATURAL_TRIGGER=true
+BOT_ENABLE_CHAT_HISTORY=false
+BOT_CHAT_HISTORY_LIMIT=10
+BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 LOG_LEVEL=INFO
 DATA_DIR=data
 LOG_DIR=logs
@@ -122,7 +129,15 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_MODEL=deepseek-v4-pro
 ```
 
-未配置 `DEEPSEEK_API_KEY` 时，只有 `/chat` 会返回配置缺失提示。
+默认关闭短期上下文，此时每次对话都是单轮请求。开启后，chat 插件只读取当前私聊用户或当前“群 + 用户”会话最近的有限消息：
+
+```bash
+BOT_ENABLE_CHAT_HISTORY=true
+BOT_CHAT_HISTORY_LIMIT=10
+BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+```
+
+未配置 `DEEPSEEK_API_KEY` 时，进入 AI 聊天的消息会返回配置缺失提示。
 
 ## 初始命令
 
@@ -131,6 +146,8 @@ DEEPSEEK_MODEL=deepseek-v4-pro
 /ping
 /status
 /chat 你好
+/清空上下文
+/上下文状态
 /天气 南昌
 /今日运势
 /签到
@@ -143,9 +160,9 @@ DEEPSEEK_MODEL=deepseek-v4-pro
 /admin status
 ```
 
-私聊可以直接说“今晚吃什么”或“外卖点什么”；群聊需要先 @ 机器人。未 @ 的普通群消息不会触发食物助手。
+私聊可以直接发送普通文本。明确的用餐决策表达会优先进入食物助手，其他文本回退到 AI 聊天；群聊需要先 @ 机器人才能使用相同入口。
 
-普通群消息不会自动调用 DeepSeek，以免刷屏和消耗额度。
+未 @ 且不是显式命令的群消息不会触发机器人，以免刷屏和消耗额度。短期上下文仅用于近期对话，不会自动成为知识库或长期记忆。
 
 ## 宝塔部署
 
