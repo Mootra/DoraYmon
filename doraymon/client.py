@@ -18,6 +18,8 @@ class MyClient(botpy.Client):
     def __init__(self, settings: Settings, *args: Any, **kwargs: Any) -> None:
         if "intents" not in kwargs:
             kwargs["intents"] = botpy.Intents(public_messages=True)
+        if "is_sandbox" not in kwargs:
+            kwargs["is_sandbox"] = settings.qqbot_sandbox
         super().__init__(*args, **kwargs)
         self.settings = settings
         self.started_at = datetime.now()

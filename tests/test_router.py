@@ -43,6 +43,22 @@ class RouterTest(unittest.TestCase):
         self.assertEqual(context.args, "你好")
 
     @patch("doraymon.router.food.handle", return_value="不应调用")
+    @patch("doraymon.router.COMMANDS")
+    def test_group_at_non_food_message_falls_back_to_chat(self, commands_mock, food_mock) -> None:
+        chat_handler = Mock(return_value="chat reply")
+        commands_mock.get.return_value = chat_handler
+        context = self._context("<@!bot> hello")
+        context.group_openid = "group-a"
+        context.is_at_message = True
+
+        reply = asyncio.run(route_incoming_message(context))
+
+        self.assertEqual(reply, "chat reply")
+        self.assertEqual(context.command, "chat")
+        self.assertEqual(context.args, "hello")
+        food_mock.assert_not_called()
+
+    @patch("doraymon.router.food.handle", return_value="blocked")
     def test_unmatched_group_message_returns_empty(self, food_mock) -> None:
         context = self._context("今天工作有点忙")
 

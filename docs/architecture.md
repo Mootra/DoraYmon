@@ -1,6 +1,6 @@
 # 架构说明
 
-DoraYmon 是一个独立的 Python QQ Bot 项目。项目不放在 `botpy/examples/` 下，方便单独部署、维护和扩展功能。
+DoraYmon 是一个独立、插件化的 Python QQ AI 助手。项目不放在 `botpy/examples/` 下，方便单独部署、维护和扩展功能。
 
 ## 分层
 
@@ -32,7 +32,27 @@ services/ 或 storage/
 返回文本给 QQ
 ```
 
-私聊普通消息会先经过意图识别。明确的用餐决策表达会进入吃什么插件，其他内容回退到 `/chat`。群聊只有显式命令或 @ 机器人时才进入这条流程，未 @ 的普通群消息不会自动触发插件。
+私聊普通消息会先经过规则意图识别。明确的用餐决策表达会进入吃什么插件，其他内容回退到 `/chat`。群聊只有显式命令或 @ 机器人时才进入这条流程，@ 后未命中意图的普通文本也会回退到 `/chat`，未 @ 的普通群消息不会自动触发插件。
+
+短期上下文只在 `plugins/chat.py` 中按配置接入。`storage/chat_history_store.py` 按私聊用户或“群 + 用户”隔离有限消息；client 和 router 不直接读写聊天历史。
+
+## RAG 数据流
+
+当前已实现以下 SQLite FTS5/BM25 基线：
+
+```text
+resources/knowledge/ Markdown/TXT
+  ↓ 离线分块和建索引
+storage/knowledge_store.py + SQLite FTS5/BM25
+  ↓ Top-K 知识块和元数据
+services/rag_service.py
+  ↓ 带来源编号和拒答规则的 Prompt
+DeepSeek 生成层
+  ↓
+答案 + 参考来源
+```
+
+`storage/knowledge_store.py` 从目录结构读取公共、群和私人作用域，只向当前群或用户返回有权访问的知识块。`services/rag_service.py` 把检索内容标为不可信资料，限制上下文长度，并要求资料不足时拒答。Embedding、余弦相似度和 RRF 混合检索只在固定评测集证明有效后加入。
 
 ## 扩展原则
 

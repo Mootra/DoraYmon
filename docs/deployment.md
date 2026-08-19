@@ -64,6 +64,33 @@ QQBOT_SECRET=
 DEEPSEEK_API_KEY=
 ```
 
+短期上下文默认关闭。如需开启，可在 `.env` 中设置：
+
+```bash
+BOT_ENABLE_CHAT_HISTORY=true
+BOT_CHAT_HISTORY_LIMIT=10
+BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+```
+
+开启后，运行数据写入本地 SQLite；部署和备份时不要提交或公开真实数据库及聊天记录。
+
+本地知识库默认关闭。将 UTF-8 Markdown/TXT 放入 `resources/knowledge/` 后建立索引：
+
+```bash
+python scripts/index_knowledge.py
+```
+
+确认索引成功后，在 `.env` 中设置：
+
+```bash
+BOT_ENABLE_RAG=true
+BOT_KNOWLEDGE_DIR=resources/knowledge
+BOT_RAG_TOP_K=3
+BOT_RAG_TOKENIZER=trigram
+```
+
+知识索引保存在运行数据目录的 `knowledge.db`，不要提交 Git。`/重建知识库` 只允许 `BOT_ADMIN_OPENIDS` 中的管理员使用。
+
 测试运行：
 
 ```bash

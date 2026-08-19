@@ -171,6 +171,34 @@ def clear_messages(scope_type: str, scope_openid: str, user_openid: str) -> int:
         return int(cursor.rowcount)
 
 
+def count_messages(scope_type: str, scope_openid: str, user_openid: str) -> int:
+    normalized_scope_type = _normalize_scope_type(scope_type)
+    normalized_user_openid = _require_text(user_openid, "user_openid")
+    normalized_scope_openid = _normalize_scope_openid(
+        normalized_scope_type,
+        scope_openid,
+        normalized_user_openid,
+    )
+
+    with closing(get_connection("doraymon")) as connection:
+        row = connection.execute(
+            """
+            SELECT COUNT(*) AS message_count
+            FROM chat_messages
+            WHERE scope_type = ?
+              AND scope_openid = ?
+              AND user_openid = ?
+            """,
+            (
+                normalized_scope_type,
+                normalized_scope_openid,
+                normalized_user_openid,
+            ),
+        ).fetchone()
+
+    return int(row["message_count"] or 0)
+
+
 def _normalize_scope_type(scope_type: str) -> str:
     normalized = _require_text(scope_type, "scope_type")
     if normalized not in VALID_SCOPE_TYPES:

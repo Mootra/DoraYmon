@@ -2,7 +2,7 @@
 
 ## 一句话定位
 
-DoraYmon 是一个 Python QQ Bot 项目，使用 `botpy` 接入 QQ，按插件组织命令，`/chat` 通过 DeepSeek 服务完成单轮问答，业务数据使用 SQLite。
+DoraYmon 是一个插件化 Python QQ AI 助手，使用 `botpy` 接入 QQ，通过 DeepSeek 提供大模型对话，支持可控短期上下文，以及基于 SQLite FTS5/BM25、带来源引用和权限过滤的本地知识库 RAG。当前意图识别是规则匹配；Embedding、向量检索、长期个人记忆和 Agent 尚未实现。
 
 ## 启动入口
 
@@ -23,7 +23,7 @@ QQ 消息
 
 - 私聊消息会进入 `route_incoming_message(..., fallback_command="chat")`。
 - 群聊未 @ 且不是显式命令时直接忽略，避免机器人主动插话。
-- 群聊 @ 或显式命令才进入路由。
+- 群聊 @ 或显式命令才进入路由；@ 普通文本未命中自然语言意图时会回退到 `chat`。
 - 回复发送、长度截断和 QQ API 调用留在 `doraymon/client.py`。
 
 ## 路由和插件机制
@@ -31,7 +31,7 @@ QQ 消息
 - `doraymon/router.py` 的 `COMMANDS` 注册命令到插件处理函数。
 - `parse_command()` 处理 `/命令 参数`。
 - `route_natural_message()` 目前只处理食物自然语言意图。
-- 食物自然语言入口优先于私聊 `/chat` 回退；未命中自然语言意图时，私聊普通文本才回退到 `/chat`。
+- 食物自然语言入口优先于聊天回退；未命中自然语言意图时，私聊普通文本和群聊 @ 普通文本才回退到 `/chat`。
 - 插件只接收 `BotContext` 并返回文本，不直接发送 QQ 消息。
 
 ## services 层职责
@@ -39,12 +39,15 @@ QQ 消息
 - `services/deepseek_service.py` 封装 DeepSeek API 请求；测试中必须 mock/fake，不能真实联网。
 - `services/intent_service.py` 做轻量规则意图识别。
 - `services/food_recommend_service.py` 做本地食物推荐，不依赖外部 API。
+- `services/rag_service.py` 负责知识检索、上下文预算、拒答 Prompt、回答生成和来源格式化。
 - 外部 API、模型调用、搜索能力应放在 `services/`，不要散落在插件里。
 
 ## storage 层职责
 
 - `storage/db.py` 统一 SQLite 连接和表初始化。
 - `storage/food_preference_store.py` 保存用户明确提交的口味偏好。
+- `storage/chat_history_store.py` 保存启用短期上下文后产生的有限聊天消息，并按私聊用户或“群 + 用户”隔离。
+- `storage/knowledge_store.py` 负责 Markdown/TXT 发现、分块、作用域元数据、SQLite FTS5 索引和 Top-K 检索。
 - `storage/sign_store.py` 保存签到记录。
 - storage 层不读取 `.env` 里的密钥，不向 QQ 输出数据库内容。
 
@@ -52,12 +55,14 @@ QQ 消息
 
 - QQ Bot 长连接启动。
 - 命令路由和插件式命令。
-- `/chat` 单轮 DeepSeek 问答。
+- `/chat` 默认单轮 DeepSeek 问答；开启 `BOT_ENABLE_CHAT_HISTORY` 后，chat 插件会使用短期上下文，并提供显式 `/清空上下文`、`/上下文状态` 管理命令。
 - `/吃什么` 本地食物推荐。
 - 私聊和群聊 @ 场景下的食物自然语言入口。
 - 明确口味的保存、查看、删除。
 - 签到、状态、帮助、管理员状态命令。
 - 天气、待办、钓鱼、宠物等部分功能仍是占位或轻量实现。
+- `/知识问`、`/知识来源`、`/知识库状态` 和管理员 `/重建知识库`；当前为 SQLite FTS5/BM25 基线。
+- Embedding、向量检索、长期个人记忆、Agent 和模型训练均未实现，不能作为当前能力宣传。
 
 ## 当前不要做的功能
 
@@ -66,6 +71,8 @@ QQ 消息
 - 不实现无限聊天记录。
 - 不自动从普通聊天提取长期记忆。
 - 不实现群成员共享私人上下文。
+- 不把短期聊天历史自动转成知识库或长期记忆。
+- 不把真实 QQ 聊天、密钥、配置、日志或业务数据库放入知识目录。
 - 不新增需要真实 QQ Bot 或真实 DeepSeek API 才能验证的功能。
 
 ## 新增插件推荐步骤
