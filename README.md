@@ -1,8 +1,8 @@
 # DoraYmon
 
-DoraYmon 是一个插件化的 Python QQ AI 助手。它使用 `botpy` 接入 QQ Bot，通过 DeepSeek 提供大模型对话，支持默认关闭、按会话隔离的可控短期上下文，并保留轻量的 SQLite 存储和离线测试能力。
+DoraYmon 是一个插件化的 Python QQ AI 助手。它使用 `botpy` 接入 QQ Bot，通过 DeepSeek 提供大模型对话，支持默认关闭、按会话隔离的可控短期上下文，以及带来源引用和权限过滤的本地知识库 RAG。
 
-当前项目没有实现 RAG、Embedding、向量检索、长期个人记忆或 Agent。下一阶段计划先用 SQLite FTS5 建立带来源引用、可离线评测的本地知识库 RAG 基线。
+当前 RAG 是 SQLite FTS5/BM25 关键词检索基线，不包含 Embedding、向量检索、长期个人记忆或 Agent。所有检索和权限行为都可以离线测试，再根据评测决定是否增加复杂组件。
 
 ## 项目结构
 
@@ -29,6 +29,7 @@ DoraYmon/
 - `services/` 放外部服务调用。
 - `storage/` 放 SQLite 连接和数据读写。
 - `docs/` 放架构、部署和功能扩展说明。
+- `resources/knowledge/` 放管理员整理的 UTF-8 Markdown/TXT 知识。
 
 ## 当前功能
 
@@ -38,6 +39,8 @@ DoraYmon/
 - DeepSeek 对话：显式 `/chat`、私聊普通文本、群聊 @ 普通文本
 - 可选短期上下文：默认关闭，支持查询状态和按当前会话清空
 - 规则式食物意图识别（不是 AI 分类模型）
+- SQLite FTS5/BM25 本地知识问答、拒答规则和来源引用
+- 公共、群、私人知识库读取权限隔离
 - SQLite 签到
 - 控制台日志和 `logs/doraymon.log`
 - 本地运行脚本
@@ -48,7 +51,7 @@ DoraYmon/
 
 协作前请先查看本地私人说明 `docs/private/project_goal.md`，了解本项目偏好的教学式、小步推进方式。`docs/private/` 由 `.gitignore` 忽略，不会提交到 Git。
 
-短期上下文之后的本地知识库 RAG、检索评测、Embedding 和混合检索路线见 [docs/learning_outline.md](docs/learning_outline.md)。
+RAG 评测、Embedding 和混合检索的后续路线见 [docs/learning_outline.md](docs/learning_outline.md)。
 
 ## 本地运行
 
@@ -102,6 +105,13 @@ BOT_ENABLE_FOOD_NATURAL_TRIGGER=true
 BOT_ENABLE_CHAT_HISTORY=false
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+BOT_ENABLE_RAG=false
+BOT_KNOWLEDGE_DIR=resources/knowledge
+BOT_RAG_TOP_K=3
+BOT_RAG_TOKENIZER=trigram
+BOT_RAG_MAX_CONTEXT_CHARS=6000
+BOT_RAG_CHUNK_MAX_CHARS=800
+BOT_RAG_CHUNK_OVERLAP_CHARS=100
 LOG_LEVEL=INFO
 DATA_DIR=data
 LOG_DIR=logs
@@ -148,6 +158,10 @@ BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 /chat 你好
 /清空上下文
 /上下文状态
+/知识问 如何在本地启动项目
+/知识来源 如何在本地启动项目
+/知识库状态
+/重建知识库
 /天气 南昌
 /今日运势
 /签到
@@ -163,6 +177,32 @@ BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 私聊可以直接发送普通文本。明确的用餐决策表达会优先进入食物助手，其他文本回退到 AI 聊天；群聊需要先 @ 机器人才能使用相同入口。
 
 未 @ 且不是显式命令的群消息不会触发机器人，以免刷屏和消耗额度。短期上下文仅用于近期对话，不会自动成为知识库或长期记忆。
+
+## 本地知识库 RAG
+
+管理员把 Markdown/TXT 放入 `resources/knowledge/`，然后离线建立索引：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\index_knowledge.py
+```
+
+开启问答：
+
+```bash
+BOT_ENABLE_RAG=true
+```
+
+资料作用域按目录区分：
+
+```text
+resources/knowledge/*.md                         公共知识
+resources/knowledge/groups/<group_openid>/*.md  对应群知识
+resources/knowledge/users/<user_openid>/*.md    对应用户私人知识
+```
+
+`/知识问` 只把当前用户有权访问的 Top-K 知识块交给 DeepSeek；无结果时直接拒答，不调用模型。`/知识来源` 可单独检查检索结果，`/知识库状态` 显示文档数、分块数、更新时间和 tokenizer。`/重建知识库` 仅管理员可用。
+
+默认 `trigram` tokenizer 用于验证中文子串召回；少于 3 个字符的查询使用受控 `LIKE` 回退。当前版本还不是向量 RAG，后续是否加入 Embedding 和混合检索由固定评测集决定。
 
 ## 宝塔部署
 

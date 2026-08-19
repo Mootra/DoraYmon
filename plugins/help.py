@@ -15,6 +15,11 @@ def handle(context: BotContext) -> str:
             f"{prefix}上下文状态 - 查看当前会话的上下文状态",
             "私聊普通文本、群聊 @ 普通文本也会进入 AI 聊天",
             "",
+            "📚 知识库",
+            f"{prefix}知识问 如何部署 - 基于本地资料回答并附来源",
+            f"{prefix}知识来源 如何部署 - 只查看检索到的来源",
+            f"{prefix}知识库状态 - 查看文档、分块和索引状态",
+            "",
             "🍜 生活",
             f"{prefix}天气 南昌 - 天气功能占位",
             f"{prefix}今日运势 - 运势功能占位",
@@ -33,6 +38,7 @@ def handle(context: BotContext) -> str:
             f"{prefix}todo - 待办功能占位",
             "",
             "🔐 管理",
+            f"{prefix}重建知识库 - 从本地资料重建索引（仅管理员）",
             f"{prefix}admin status - 管理员状态命令",
         ]
     )

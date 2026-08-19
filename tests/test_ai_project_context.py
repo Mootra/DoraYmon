@@ -111,7 +111,8 @@ class AIProjectContextTest(unittest.TestCase):
         self.assertNotIn("chat_history_store", client)
         self.assertNotIn("chat_history_store", router)
         self.assertIn("可控短期上下文", content)
-        self.assertIn("RAG、Embedding、长期个人记忆和 Agent 尚未实现", content)
+        self.assertIn("SQLite FTS5/BM25", content)
+        self.assertIn("Embedding、向量检索、长期个人记忆和 Agent 尚未实现", content)
         self.assertIn("不实现无限聊天记录", content)
 
     def test_chat_history_commands_and_config_are_documented(self) -> None:
@@ -144,6 +145,29 @@ class AIProjectContextTest(unittest.TestCase):
         ):
             with self.subTest(yaml_key=yaml_key):
                 self.assertIn(yaml_key, yaml_example)
+
+    def test_rag_commands_and_config_are_documented(self) -> None:
+        readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+        commands = (PROJECT_ROOT / "docs" / "commands.md").read_text(encoding="utf-8")
+        env_example = (PROJECT_ROOT / ".env.example").read_text(encoding="utf-8")
+        help_source = (PROJECT_ROOT / "plugins" / "help.py").read_text(encoding="utf-8")
+
+        for command in ("知识问", "知识来源", "知识库状态", "重建知识库"):
+            with self.subTest(command=command):
+                self.assertIn(command, COMMANDS)
+                self.assertIn(f"/{command}", readme)
+                self.assertIn(f"/{command}", commands)
+                self.assertIn(command, help_source)
+
+        for env_name in (
+            "BOT_ENABLE_RAG",
+            "BOT_KNOWLEDGE_DIR",
+            "BOT_RAG_TOP_K",
+            "BOT_RAG_TOKENIZER",
+        ):
+            with self.subTest(env_name=env_name):
+                self.assertIn(env_name, readme)
+                self.assertIn(env_name, env_example)
 
     def test_test_file_does_not_read_real_secret_files(self) -> None:
         source = Path(__file__).read_text(encoding="utf-8")

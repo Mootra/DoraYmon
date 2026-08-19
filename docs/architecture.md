@@ -36,9 +36,9 @@ services/ 或 storage/
 
 短期上下文只在 `plugins/chat.py` 中按配置接入。`storage/chat_history_store.py` 按私聊用户或“群 + 用户”隔离有限消息；client 和 router 不直接读写聊天历史。
 
-## 规划中的 RAG 数据流
+## RAG 数据流
 
-以下链路尚未实现，完成检索、引用和离线评测后才能作为项目能力：
+当前已实现以下 SQLite FTS5/BM25 基线：
 
 ```text
 resources/knowledge/ Markdown/TXT
@@ -52,7 +52,7 @@ DeepSeek 生成层
 答案 + 参考来源
 ```
 
-第一版保持关键词检索基线。Embedding、余弦相似度和 RRF 混合检索只在固定评测集证明有效后加入；知识库权限需要区分公共、群和私人作用域。
+`storage/knowledge_store.py` 从目录结构读取公共、群和私人作用域，只向当前群或用户返回有权访问的知识块。`services/rag_service.py` 把检索内容标为不可信资料，限制上下文长度，并要求资料不足时拒答。Embedding、余弦相似度和 RRF 混合检索只在固定评测集证明有效后加入。
 
 ## 扩展原则
 

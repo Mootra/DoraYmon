@@ -81,6 +81,13 @@ class Settings:
     chat_history_enabled: bool = False
     chat_history_limit: int = 10
     chat_history_max_content_length: int = 1000
+    rag_enabled: bool = False
+    rag_top_k: int = 3
+    rag_tokenizer: str = "trigram"
+    rag_max_context_chars: int = 6000
+    rag_chunk_max_chars: int = 800
+    rag_chunk_overlap_chars: int = 100
+    knowledge_dir: str = "resources/knowledge"
     log_level: str = "INFO"
     data_dir: str = "data"
     log_dir: str = "logs"
@@ -146,6 +153,53 @@ def load_settings() -> Settings:
             ),
             1000,
         ),
+        rag_enabled=_to_bool(
+            _env_or_config("BOT_ENABLE_RAG", config, "rag.enabled", False)
+        ),
+        rag_top_k=_to_int(
+            _env_or_config("BOT_RAG_TOP_K", config, "rag.top_k", 3),
+            3,
+        ),
+        rag_tokenizer=str(
+            _env_or_config("BOT_RAG_TOKENIZER", config, "rag.tokenizer", "trigram")
+        ).strip().lower()
+        or "trigram",
+        rag_max_context_chars=_to_int(
+            _env_or_config(
+                "BOT_RAG_MAX_CONTEXT_CHARS",
+                config,
+                "rag.max_context_chars",
+                6000,
+            ),
+            6000,
+        ),
+        rag_chunk_max_chars=_to_int(
+            _env_or_config(
+                "BOT_RAG_CHUNK_MAX_CHARS",
+                config,
+                "rag.chunk_max_chars",
+                800,
+            ),
+            800,
+        ),
+        rag_chunk_overlap_chars=_to_int(
+            _env_or_config(
+                "BOT_RAG_CHUNK_OVERLAP_CHARS",
+                config,
+                "rag.chunk_overlap_chars",
+                100,
+            ),
+            100,
+        ),
+        knowledge_dir=str(
+            _env_or_config(
+                "BOT_KNOWLEDGE_DIR",
+                config,
+                "rag.knowledge_dir",
+                "resources/knowledge",
+            )
+        ).strip()
+        or "resources/knowledge",
         log_level=str(_env_or_config("LOG_LEVEL", config, "log.level", "INFO")).strip() or "INFO",
         data_dir=str(_env_or_config("DATA_DIR", config, "paths.data_dir", "data")).strip() or "data",
         log_dir=str(_env_or_config("LOG_DIR", config, "paths.log_dir", "logs")).strip() or "logs",
