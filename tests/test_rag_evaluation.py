@@ -20,6 +20,23 @@ class RagEvaluationTest(unittest.TestCase):
         self.assertTrue(any(case.user_openid for case in cases))
         self.assertTrue(any(not case.answerable for case in cases))
 
+    def test_repository_eval_baseline_meets_regression_floor(self) -> None:
+        cases = load_eval_cases(PROJECT_ROOT / "evals" / "rag_cases.jsonl")
+
+        report = evaluate_retrieval(
+            cases,
+            PROJECT_ROOT / "evals" / "fixtures" / "knowledge",
+            tokenizer="trigram",
+            top_k=3,
+            chunk_max_chars=800,
+            chunk_overlap_chars=100,
+        )
+
+        self.assertGreaterEqual(report.metrics.recall_at_k, 0.85)
+        self.assertGreaterEqual(report.metrics.mrr, 0.85)
+        self.assertEqual(report.metrics.no_answer_accuracy, 1.0)
+        self.assertEqual(report.metrics.scope_violation_count, 0)
+
     def test_loader_rejects_inconsistent_answerable_flag(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "cases.jsonl"
