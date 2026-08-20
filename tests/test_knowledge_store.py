@@ -92,6 +92,58 @@ class KnowledgeStoreTest(unittest.TestCase):
 
         self.assertEqual([result.title for result in results], ["项目部署说明"])
 
+    def test_long_query_falls_back_to_multiple_two_character_matches(self) -> None:
+        self._write(
+            "context.md",
+            "# 短期上下文\n\n清空上下文只清除当前会话，不影响其他聊天。",
+        )
+        self._write("unrelated.md", "# 其他说明\n\n当前版本支持普通聊天。")
+        rebuild_knowledge_index(self.knowledge_dir)
+
+        results = search_knowledge("怎样只清空当前聊天会话", limit=3)
+
+        self.assertEqual([result.title for result in results], ["短期上下文"])
+        self.assertLessEqual(results[0].score, -3)
+
+    def test_long_like_fallback_rejects_a_single_generic_match(self) -> None:
+        self._write("status.md", "# 运行状态\n\n当前机器人运行正常。")
+        rebuild_knowledge_index(self.knowledge_dir)
+
+        results = search_knowledge("我的宠物现在是多少级", limit=3)
+
+        self.assertEqual(results, [])
+
+    def test_long_like_fallback_accepts_two_distinct_key_matches(self) -> None:
+        self._write(
+            "context.md",
+            "# 会话设置\n\n聊天上下文支持闲置失效。",
+        )
+        rebuild_knowledge_index(self.knowledge_dir)
+
+        results = search_knowledge("聊天记录闲置多久会自动过期", limit=3)
+
+        self.assertEqual([result.title for result in results], ["会话设置"])
+        self.assertLessEqual(results[0].score, -2)
+
+    def test_long_like_fallback_keeps_scope_isolation(self) -> None:
+        self._write(
+            "groups/group-a/context.md",
+            "# 群上下文\n\n清空上下文只清除当前群聊会话。",
+        )
+        rebuild_knowledge_index(self.knowledge_dir)
+
+        allowed = search_knowledge(
+            "怎样只清空当前聊天会话",
+            group_openid="group-a",
+        )
+        denied = search_knowledge(
+            "怎样只清空当前聊天会话",
+            group_openid="group-b",
+        )
+
+        self.assertEqual([result.title for result in allowed], ["群上下文"])
+        self.assertEqual(denied, [])
+
     def test_query_syntax_characters_do_not_escape_generated_fts_query(self) -> None:
         self._write("deploy.md", "# 项目部署说明\n\n知识库部署流程。")
         rebuild_knowledge_index(self.knowledge_dir)

@@ -22,3 +22,20 @@
 - `权限泄漏`：结果中是否出现当前群或用户无权读取的资料。
 
 先保存基线，再根据失败样例调整查询、分块和 Top-K。不要先调参数再修改评测答案。
+
+## 当前默认基线
+
+2026-08-20 使用 `trigram`、`top_k=3`、`chunk=800`、`overlap=100`：
+
+- Recall@3：`0.850`
+- MRR：`0.850`
+- 无答案空召回准确率：`1.000`
+- 权限泄漏：`0`
+
+当前仍未命中的 `context-not-memory`、`semantic-follow-up`、`semantic-local-run` 是语义改写压力样例。不要为它们添加逐句硬编码；后续用真实样例判断是否值得引入 Embedding 或更系统的查询改写。
+
+需要把当前基线作为回归门槛时运行：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\eval_rag.py --min-recall 0.85 --min-mrr 0.85 --min-no-answer-accuracy 1 --require-zero-scope-violations
+```
