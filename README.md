@@ -54,6 +54,14 @@ DoraYmon/
 
 RAG 评测、Embedding 和混合检索的后续路线见 [docs/learning_outline.md](docs/learning_outline.md)。
 
+当前仓库还提供一套与正式知识库隔离的固定离线检索评测：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\eval_rag.py
+```
+
+评测会报告 Recall@K、MRR、无答案空召回准确率和权限泄漏数量，并使用临时数据库，不覆盖运行中的知识索引。样例和说明见 [evals/README.md](evals/README.md)。
+
 ## 从零搭建
 
 ### 第一步：在 QQ 开放平台创建机器人
