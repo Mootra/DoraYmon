@@ -9,7 +9,8 @@
 | `/status` | 查看启动时间、运行模式和数据目录 |
 | `/chat 你好` | 调用 DeepSeek；短期上下文关闭时为单轮问答 |
 | `/清空上下文` | 清空当前私聊或“群 + 用户”会话的短期上下文 |
-| `/上下文状态` | 查看短期上下文开关、会话类型、消息数和读取上限 |
+| `/上下文状态` | 查看短期上下文开关、会话类型、消息数、预算和闲置过期时间 |
+| `/上下文摘要` | 查看当前会话完整问答轮次的本地节选摘要 |
 | `/知识问 [问题]` | 检索本地知识库，由 DeepSeek 依据资料回答并附来源 |
 | `/知识来源 [问题]` | 只查看该问题检索到的知识块和来源路径 |
 | `/知识库状态` | 查看问答开关、文档数、分块数、更新时间和索引类型 |
@@ -27,6 +28,6 @@
 
 私聊中可以直接发送普通文本：明确的用餐决策表达会优先调用吃什么助手，其他内容回退到 AI 聊天。群聊中需要先 @ 机器人；@ 后的普通文本遵循相同规则，未 @ 且不是显式命令的群消息会被忽略。可以通过 `BOT_ENABLE_FOOD_NATURAL_TRIGGER=false` 关闭食物自然语言触发，显式 `/吃什么` 命令不受影响。
 
-短期上下文默认关闭。设置 `BOT_ENABLE_CHAT_HISTORY=true` 后，chat 插件会按当前私聊用户或“群 + 用户”隔离保存最近完整问答轮次；`BOT_CHAT_HISTORY_LIMIT` 控制保留和读取的消息数，`BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH` 控制单条保存长度，`BOT_CHAT_CONTEXT_MAX_CHARS` 控制送入模型的历史总字符数。聊天历史不会自动成为长期记忆或知识库。
+短期上下文默认关闭。设置 `BOT_ENABLE_CHAT_HISTORY=true` 后，chat 插件会按当前私聊用户或“群 + 用户”隔离保存最近完整问答轮次；`BOT_CHAT_HISTORY_LIMIT` 控制保留和读取的消息数，`BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH` 控制单条保存长度，`BOT_CHAT_CONTEXT_MAX_CHARS` 控制送入模型的历史总字符数，`BOT_CHAT_CONTEXT_SUMMARY_MAX_CHARS` 控制旧轮次本地节选摘要长度，`BOT_CHAT_CONTEXT_TTL_MINUTES` 控制会话闲置多久后整体失效。聊天历史不会自动成为长期记忆或知识库。
 
 本地知识问答默认关闭。管理员先运行 `python scripts/index_knowledge.py` 或 `/重建知识库` 建立索引，再设置 `BOT_ENABLE_RAG=true` 开启 `/知识问` 和普通聊天的可选知识增强。公共资料放在知识目录根部；群资料放在 `groups/<group_openid>/`；私人资料放在 `users/<user_openid>/`。索引只读取 UTF-8 Markdown/TXT，短期聊天历史不会自动进入知识库。

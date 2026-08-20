@@ -250,6 +250,53 @@ def clear_messages(scope_type: str, scope_openid: str, user_openid: str) -> int:
         return int(cursor.rowcount)
 
 
+def expire_messages(
+    scope_type: str,
+    scope_openid: str,
+    user_openid: str,
+    ttl_minutes: int,
+) -> int:
+    normalized_scope_type = _normalize_scope_type(scope_type)
+    normalized_user_openid = _require_text(user_openid, "user_openid")
+    normalized_scope_openid = _normalize_scope_openid(
+        normalized_scope_type,
+        scope_openid,
+        normalized_user_openid,
+    )
+    normalized_ttl = int(ttl_minutes)
+    if normalized_ttl <= 0:
+        return 0
+
+    with closing(get_connection("doraymon")) as connection:
+        cursor = connection.execute(
+            """
+            DELETE FROM chat_messages
+            WHERE scope_type = ?
+              AND scope_openid = ?
+              AND user_openid = ?
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM chat_messages AS recent
+                  WHERE recent.scope_type = ?
+                    AND recent.scope_openid = ?
+                    AND recent.user_openid = ?
+                    AND recent.created_at >= datetime('now', ?)
+              )
+            """,
+            (
+                normalized_scope_type,
+                normalized_scope_openid,
+                normalized_user_openid,
+                normalized_scope_type,
+                normalized_scope_openid,
+                normalized_user_openid,
+                f"-{normalized_ttl} minutes",
+            ),
+        )
+        connection.commit()
+        return int(cursor.rowcount)
+
+
 def count_messages(scope_type: str, scope_openid: str, user_openid: str) -> int:
     normalized_scope_type = _normalize_scope_type(scope_type)
     normalized_user_openid = _require_text(user_openid, "user_openid")

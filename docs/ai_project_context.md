@@ -47,7 +47,7 @@ QQ 消息
 
 - `storage/db.py` 统一 SQLite 连接和表初始化。
 - `storage/food_preference_store.py` 保存用户明确提交的口味偏好。
-- `storage/chat_history_store.py` 保存启用短期上下文后产生的有限聊天消息，并按私聊用户或“群 + 用户”隔离。
+- `storage/chat_history_store.py` 保存启用短期上下文后产生的有限聊天消息，按私聊用户或“群 + 用户”隔离，并按最后活跃时间整体清理过期会话。
 - `storage/knowledge_store.py` 负责 Markdown/TXT 发现、分块、作用域元数据、SQLite FTS5 索引和 Top-K 检索。
 - `storage/sign_store.py` 保存签到记录。
 - storage 层不读取 `.env` 里的密钥，不向 QQ 输出数据库内容。
@@ -56,7 +56,7 @@ QQ 消息
 
 - QQ Bot 长连接启动。
 - 命令路由和插件式命令。
-- `/chat` 默认单轮 DeepSeek 问答；开启 `BOT_ENABLE_CHAT_HISTORY` 后，chat 插件会使用受字符预算约束的完整短期问答轮次，并提供显式 `/清空上下文`、`/上下文状态` 管理命令。
+- `/chat` 默认单轮 DeepSeek 问答；开启 `BOT_ENABLE_CHAT_HISTORY` 后，chat 插件会使用受字符预算约束的完整短期问答轮次，支持旧轮次本地节选压缩、闲置过期、明确换话题，并提供 `/清空上下文`、`/上下文状态`、`/上下文摘要` 管理命令。
 - `/吃什么` 本地食物推荐。
 - 私聊和群聊 @ 场景下的食物自然语言入口。
 - 明确口味的保存、查看、删除。
