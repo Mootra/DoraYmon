@@ -30,6 +30,7 @@
 BOT_ENABLE_CHAT_HISTORY=false
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+BOT_CHAT_CONTEXT_MAX_CHARS=6000
 ```
 
 需要持续验证：
@@ -38,6 +39,8 @@ BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 - 私聊用户之间隔离。
 - 群聊按“群 + 用户”隔离，不共享私人上下文。
 - DeepSeek 失败时不保存伪造的助手回答。
+- 只发送和保留完整问答轮次，并限制历史总字符数。
+- 开启 RAG 后，短追问可以结合上一轮问题检索，检索故障时普通聊天仍可用。
 - 状态命令不返回完整聊天内容。
 - 密钥、配置内容和真实聊天数据库不进入测试或 Git。
 

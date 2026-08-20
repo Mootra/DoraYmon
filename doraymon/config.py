@@ -81,6 +81,7 @@ class Settings:
     chat_history_enabled: bool = False
     chat_history_limit: int = 10
     chat_history_max_content_length: int = 1000
+    chat_context_max_chars: int = 6000
     rag_enabled: bool = False
     rag_top_k: int = 3
     rag_tokenizer: str = "trigram"
@@ -152,6 +153,15 @@ def load_settings() -> Settings:
                 1000,
             ),
             1000,
+        ),
+        chat_context_max_chars=_to_int(
+            _env_or_config(
+                "BOT_CHAT_CONTEXT_MAX_CHARS",
+                config,
+                "chat.context_max_chars",
+                6000,
+            ),
+            6000,
         ),
         rag_enabled=_to_bool(
             _env_or_config("BOT_ENABLE_RAG", config, "rag.enabled", False)

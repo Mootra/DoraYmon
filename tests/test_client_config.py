@@ -4,10 +4,22 @@ import unittest
 from unittest.mock import patch
 
 from doraymon.client import MyClient
-from doraymon.config import Settings
+from doraymon.config import Settings, load_settings
 
 
 class ClientConfigTest(unittest.TestCase):
+    @patch("doraymon.config.load_dotenv")
+    @patch("doraymon.config._load_yaml_config", return_value={})
+    @patch.dict("os.environ", {"BOT_CHAT_CONTEXT_MAX_CHARS": "4321"})
+    def test_chat_context_budget_is_loaded_from_environment(
+        self,
+        config_mock,
+        dotenv_mock,
+    ) -> None:
+        settings = load_settings()
+
+        self.assertEqual(settings.chat_context_max_chars, 4321)
+
     @patch("doraymon.client.botpy.Client.__init__", return_value=None)
     def test_sandbox_setting_is_forwarded_to_botpy_client(self, client_init_mock) -> None:
         for sandbox_enabled in (True, False):

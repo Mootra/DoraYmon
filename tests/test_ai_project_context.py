@@ -133,6 +133,7 @@ class AIProjectContextTest(unittest.TestCase):
             "BOT_ENABLE_CHAT_HISTORY",
             "BOT_CHAT_HISTORY_LIMIT",
             "BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH",
+            "BOT_CHAT_CONTEXT_MAX_CHARS",
         ):
             with self.subTest(env_name=env_name):
                 self.assertIn(env_name, readme)
@@ -142,6 +143,7 @@ class AIProjectContextTest(unittest.TestCase):
             "history_enabled:",
             "history_limit:",
             "history_max_content_length:",
+            "context_max_chars:",
         ):
             with self.subTest(yaml_key=yaml_key):
                 self.assertIn(yaml_key, yaml_example)
