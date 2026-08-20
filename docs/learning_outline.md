@@ -88,6 +88,14 @@ MVP 命令：
 
 ## 5. 建立固定 RAG 评测集
 
+仓库已加入第一版固定离线检索评测框架：`evals/rag_cases.jsonl` 保存样例，`evals/fixtures/knowledge/` 保存隔离的评测资料，`scripts/eval_rag.py` 使用临时数据库输出 Recall@K、MRR、无答案空召回准确率和权限泄漏数量。它是可重复的技术基线，不代表真实用户知识库已经达到生产质量。
+
+运行方式：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\eval_rag.py
+```
+
 先准备 20～50 个固定问题，覆盖：
 
 - 单文档直接命中。
