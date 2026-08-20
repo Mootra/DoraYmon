@@ -13,6 +13,7 @@ from doraymon.config import Settings
 from doraymon.context import BotContext
 from doraymon.router import route_incoming_message
 from plugins import chat
+from services.deepseek_service import DEFAULT_SYSTEM_PROMPT
 from storage.chat_history_store import ChatMessage, init_chat_history_table, list_recent_messages
 
 
@@ -57,7 +58,7 @@ class ChatPluginHistoryTest(unittest.TestCase):
     def test_chat_history_is_disabled_by_default(self) -> None:
         self.assertFalse(Settings().chat_history_enabled)
 
-    @patch("plugins.chat.save_message")
+    @patch("plugins.chat.save_turn")
     @patch("plugins.chat.list_recent_messages")
     @patch("plugins.chat.init_chat_history_table")
     @patch("plugins.chat.DeepSeekService")
@@ -81,7 +82,34 @@ class ChatPluginHistoryTest(unittest.TestCase):
         list_mock.assert_not_called()
         save_mock.assert_not_called()
 
-    @patch("plugins.chat.save_message")
+    @patch("plugins.chat.save_turn")
+    @patch("plugins.chat.ConversationService")
+    @patch("plugins.chat.DeepSeekService")
+    def test_rag_enabled_uses_conversation_service_without_chat_history(
+        self,
+        service_cls_mock,
+        conversation_cls_mock,
+        save_mock,
+    ) -> None:
+        context = self._context(history_enabled=False)
+        context.settings = Settings(
+            deepseek_api_key="sk-test",
+            chat_history_enabled=False,
+            rag_enabled=True,
+        )
+        conversation_cls_mock.return_value.answer.return_value.answer = "知识增强回复"
+
+        reply = asyncio.run(chat.handle(context))
+
+        self.assertEqual(reply, "知识增强回复")
+        service_cls_mock.return_value.chat.assert_not_called()
+        conversation_cls_mock.assert_called_once_with(
+            context.settings,
+            model_service=service_cls_mock.return_value,
+        )
+        save_mock.assert_not_called()
+
+    @patch("plugins.chat.save_turn")
     @patch("plugins.chat.list_recent_messages")
     @patch("plugins.chat.init_chat_history_table")
     @patch("plugins.chat.DeepSeekService")
@@ -101,7 +129,7 @@ class ChatPluginHistoryTest(unittest.TestCase):
         init_mock.assert_called_once()
         list_mock.assert_called_once_with("private", "user-a", "user-a", 3)
 
-    @patch("plugins.chat.save_message")
+    @patch("plugins.chat.save_turn")
     @patch("plugins.chat.list_recent_messages")
     @patch("plugins.chat.init_chat_history_table")
     @patch("plugins.chat.DeepSeekService")
@@ -126,7 +154,7 @@ class ChatPluginHistoryTest(unittest.TestCase):
         self.assertEqual(
             messages,
             [
-                {"role": "system", "content": "你是 DoraYmon，一个简洁、友好的 QQ Bot 助手。"},
+                {"role": "system", "content": DEFAULT_SYSTEM_PROMPT},
                 {"role": "user", "content": "上一轮问题"},
                 {"role": "assistant", "content": "上一轮回答"},
                 {"role": "user", "content": "这一轮问题"},
@@ -146,15 +174,17 @@ class ChatPluginHistoryTest(unittest.TestCase):
         service_cls_mock.return_value.chat_messages.return_value = "成功回复"
         context = self._context(args="保存这一轮")
 
-        with patch("plugins.chat.save_message") as save_mock:
+        with patch("plugins.chat.save_turn") as save_mock:
             reply = asyncio.run(chat.handle(context))
 
         self.assertEqual(reply, "成功回复")
-        self.assertEqual(save_mock.call_count, 2)
-        self.assertEqual(save_mock.call_args_list[0].args[:5], ("private", "user-a", "user-a", "user", "保存这一轮"))
-        self.assertEqual(save_mock.call_args_list[1].args[:5], ("private", "user-a", "user-a", "assistant", "成功回复"))
+        save_mock.assert_called_once()
+        self.assertEqual(
+            save_mock.call_args.args[:5],
+            ("private", "user-a", "user-a", "保存这一轮", "成功回复"),
+        )
 
-    @patch("plugins.chat.save_message")
+    @patch("plugins.chat.save_turn")
     @patch("plugins.chat.list_recent_messages", return_value=[])
     @patch("plugins.chat.init_chat_history_table")
     @patch("plugins.chat.DeepSeekService")
@@ -184,7 +214,7 @@ class ChatPluginHistoryTest(unittest.TestCase):
         self.assertEqual(reply, "不应保存")
         self.assertEqual(messages, [])
 
-    @patch("plugins.chat.save_message")
+    @patch("plugins.chat.save_turn")
     @patch("plugins.chat.list_recent_messages")
     @patch("plugins.chat.init_chat_history_table")
     @patch("plugins.chat.DeepSeekService")

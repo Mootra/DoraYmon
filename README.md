@@ -37,7 +37,8 @@ DoraYmon/
 - 命令路由
 - 插件式命令
 - DeepSeek 对话：显式 `/chat`、私聊普通文本、群聊 @ 普通文本
-- 可选短期上下文：默认关闭，支持查询状态和按当前会话清空
+- 统一对话编排：完整问答轮次、上下文字符预算，以及开启 RAG 后的可选知识增强
+- 可选短期上下文：默认关闭，支持查询状态、按当前会话清空和有限历史保留
 - 规则式食物意图识别（不是 AI 分类模型）
 - SQLite FTS5/BM25 本地知识问答、拒答规则和来源引用
 - 公共、群、私人知识库读取权限隔离
@@ -173,6 +174,7 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 BOT_ENABLE_CHAT_HISTORY=true
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+BOT_CHAT_CONTEXT_MAX_CHARS=6000
 ```
 
 ### 第八步：建立本地知识库（可选）
@@ -208,6 +210,7 @@ BOT_ENABLE_FOOD_NATURAL_TRIGGER=true
 BOT_ENABLE_CHAT_HISTORY=false
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+BOT_CHAT_CONTEXT_MAX_CHARS=6000
 BOT_ENABLE_RAG=false
 BOT_KNOWLEDGE_DIR=resources/knowledge
 BOT_RAG_TOP_K=3
@@ -248,9 +251,12 @@ DEEPSEEK_MODEL=deepseek-v4-pro
 BOT_ENABLE_CHAT_HISTORY=true
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+BOT_CHAT_CONTEXT_MAX_CHARS=6000
 ```
 
 未配置 `DEEPSEEK_API_KEY` 时，进入 AI 聊天的消息会返回配置缺失提示。
+
+开启后，历史按完整的“用户问题 + 助手回答”轮次进入模型，并受 `BOT_CHAT_CONTEXT_MAX_CHARS` 总字符预算约束；数据库只保留配置允许的最近完整轮次。
 
 ## 初始命令
 
@@ -304,6 +310,8 @@ resources/knowledge/users/<user_openid>/*.md    对应用户私人知识
 ```
 
 `/知识问` 只把当前用户有权访问的 Top-K 知识块交给 DeepSeek；无结果时直接拒答，不调用模型。`/知识来源` 可单独检查检索结果，`/知识库状态` 显示文档数、分块数、更新时间和 tokenizer。`/重建知识库` 仅管理员可用。
+
+开启 `BOT_ENABLE_RAG=true` 后，普通 `/chat` 和自然聊天也会尝试检索有权限访问的知识。检索没有结果或索引暂时不可用时会继续普通对话；短追问会结合上一轮用户问题生成检索查询。只有回答实际引用 `[编号]` 时才附上对应资料来源。`/知识问` 仍保留为严格的“只能依据知识库回答”入口。
 
 默认 `trigram` tokenizer 用于验证中文子串召回；少于 3 个字符的查询使用受控 `LIKE` 回退。当前版本还不是向量 RAG，后续是否加入 Embedding 和混合检索由固定评测集决定。
 

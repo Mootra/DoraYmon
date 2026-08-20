@@ -34,7 +34,7 @@ services/ 或 storage/
 
 私聊普通消息会先经过规则意图识别。明确的用餐决策表达会进入吃什么插件，其他内容回退到 `/chat`。群聊只有显式命令或 @ 机器人时才进入这条流程，@ 后未命中意图的普通文本也会回退到 `/chat`，未 @ 的普通群消息不会自动触发插件。
 
-短期上下文只在 `plugins/chat.py` 中按配置接入。`storage/chat_history_store.py` 按私聊用户或“群 + 用户”隔离有限消息；client 和 router 不直接读写聊天历史。
+短期上下文只在 `plugins/chat.py` 中按配置接入。`services/conversation_service.py` 负责选择完整问答轮次、执行字符预算、扩展短追问检索查询，并在 RAG 开启时注入可选知识资料。`storage/chat_history_store.py` 按私聊用户或“群 + 用户”隔离有限消息，整轮原子保存并清理旧消息；client 和 router 不直接读写聊天历史。
 
 ## RAG 数据流
 
@@ -52,7 +52,7 @@ DeepSeek 生成层
 答案 + 参考来源
 ```
 
-`storage/knowledge_store.py` 从目录结构读取公共、群和私人作用域，只向当前群或用户返回有权访问的知识块。`services/rag_service.py` 把检索内容标为不可信资料，限制上下文长度，并要求资料不足时拒答。Embedding、余弦相似度和 RRF 混合检索只在固定评测集证明有效后加入。
+`storage/knowledge_store.py` 从目录结构读取公共、群和私人作用域，只向当前群或用户返回有权访问的知识块。`services/rag_service.py` 把检索内容标为不可信资料，限制上下文长度，并要求资料不足时拒答。普通聊天通过 `services/conversation_service.py` 可选复用同一检索能力，但资料不足或索引故障时继续普通聊天。Embedding、余弦相似度和 RRF 混合检索只在固定评测集证明有效后加入。
 
 ## 扩展原则
 

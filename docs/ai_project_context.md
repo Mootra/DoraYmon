@@ -37,6 +37,7 @@ QQ 消息
 ## services 层职责
 
 - `services/deepseek_service.py` 封装 DeepSeek API 请求；测试中必须 mock/fake，不能真实联网。
+- `services/conversation_service.py` 负责普通聊天的完整轮次选择、字符预算、短追问检索扩展和可选知识注入。
 - `services/intent_service.py` 做轻量规则意图识别。
 - `services/food_recommend_service.py` 做本地食物推荐，不依赖外部 API。
 - `services/rag_service.py` 负责知识检索、上下文预算、拒答 Prompt、回答生成和来源格式化。
@@ -55,13 +56,14 @@ QQ 消息
 
 - QQ Bot 长连接启动。
 - 命令路由和插件式命令。
-- `/chat` 默认单轮 DeepSeek 问答；开启 `BOT_ENABLE_CHAT_HISTORY` 后，chat 插件会使用短期上下文，并提供显式 `/清空上下文`、`/上下文状态` 管理命令。
+- `/chat` 默认单轮 DeepSeek 问答；开启 `BOT_ENABLE_CHAT_HISTORY` 后，chat 插件会使用受字符预算约束的完整短期问答轮次，并提供显式 `/清空上下文`、`/上下文状态` 管理命令。
 - `/吃什么` 本地食物推荐。
 - 私聊和群聊 @ 场景下的食物自然语言入口。
 - 明确口味的保存、查看、删除。
 - 签到、状态、帮助、管理员状态命令。
 - 天气、待办、钓鱼、宠物等部分功能仍是占位或轻量实现。
 - `/知识问`、`/知识来源`、`/知识库状态` 和管理员 `/重建知识库`；当前为 SQLite FTS5/BM25 基线。
+- 开启 RAG 后，普通聊天可按权限使用可选知识资料；检索失败不阻断普通对话，严格拒答仍由 `/知识问` 提供。
 - Embedding、向量检索、长期个人记忆、Agent 和模型训练均未实现，不能作为当前能力宣传。
 
 ## 当前不要做的功能

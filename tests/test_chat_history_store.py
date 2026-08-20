@@ -12,6 +12,7 @@ from storage.chat_history_store import (
     init_chat_history_table,
     list_recent_messages,
     save_message,
+    save_turn,
 )
 
 
@@ -79,6 +80,41 @@ class ChatHistoryStoreTest(unittest.TestCase):
         messages = list_recent_messages("private", "user-a", "user-a", limit=3)
 
         self.assertEqual([message.content for message in messages], ["消息 2", "消息 3", "消息 4"])
+
+    def test_save_turn_is_atomic_when_assistant_content_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            save_turn(
+                "private",
+                "user-a",
+                "user-a",
+                "正常问题",
+                "包含 DEEPSEEK_" + "API_KEY= 的回答",
+            )
+
+        self.assertEqual(list_recent_messages("private", "user-a", "user-a", 10), [])
+
+    def test_save_turn_prunes_to_complete_recent_turns(self) -> None:
+        for index in range(4):
+            save_turn(
+                "private",
+                "user-a",
+                "user-a",
+                f"问题 {index}",
+                f"回答 {index}",
+                retain_messages=5,
+            )
+
+        messages = list_recent_messages("private", "user-a", "user-a", 10)
+
+        self.assertEqual(
+            [(message.role, message.content) for message in messages],
+            [
+                ("user", "问题 2"),
+                ("assistant", "回答 2"),
+                ("user", "问题 3"),
+                ("assistant", "回答 3"),
+            ],
+        )
 
     def test_messages_are_returned_from_old_to_new(self) -> None:
         save_message("private", "user-a", "user-a", "user", "第一条")

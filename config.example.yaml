@@ -20,6 +20,7 @@ chat:
   history_enabled: false
   history_limit: 10
   history_max_content_length: 1000
+  context_max_chars: 6000
 
 rag:
   enabled: false
