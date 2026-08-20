@@ -14,6 +14,7 @@ from storage.db import get_connection
 SUPPORTED_SUFFIXES = {".md", ".txt"}
 SUPPORTED_TOKENIZERS = {"trigram", "unicode61"}
 DEFAULT_TOKENIZER = "trigram"
+MAX_LIKE_FALLBACK_TERMS = 16
 HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 SEARCH_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9_]+|[\u3400-\u9fff]+")
 CJK_PATTERN = re.compile(r"^[\u3400-\u9fff]+$")
@@ -340,44 +341,16 @@ def search_knowledge(
                     ) from exc
                 raise
         else:
-            like_query = f"%{_escape_like(_fallback_like_term(normalized_query))}%"
-            rows = connection.execute(
-                """
-                SELECT
-                    c.id AS chunk_id,
-                    d.id AS document_id,
-                    d.source_path,
-                    d.title,
-                    c.heading,
-                    c.content,
-                    d.scope_type,
-                    d.scope_openid,
-                    0.0 AS score
-                FROM knowledge_chunks AS c
-                JOIN knowledge_documents AS d
-                  ON d.id = c.document_id
-                WHERE (
-                    c.title LIKE ? ESCAPE '\\'
-                    OR c.heading LIKE ? ESCAPE '\\'
-                    OR c.content LIKE ? ESCAPE '\\'
-                )
-                  AND (
-                    d.scope_type = 'public'
-                    OR (d.scope_type = 'group' AND d.scope_openid = ?)
-                    OR (d.scope_type = 'private' AND d.scope_openid = ?)
-                  )
-                ORDER BY d.id, c.chunk_index
-                LIMIT ?
-                """,
-                (
-                    like_query,
-                    like_query,
-                    like_query,
-                    str(group_openid or ""),
-                    str(user_openid or ""),
-                    int(limit),
-                ),
-            ).fetchall()
+            rows = []
+
+        if not rows:
+            rows = _search_with_like_fallback(
+                connection,
+                normalized_query,
+                limit=int(limit),
+                group_openid=str(group_openid or ""),
+                user_openid=str(user_openid or ""),
+            )
 
     return [
         KnowledgeSearchResult(
@@ -518,8 +491,93 @@ def _escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-def _fallback_like_term(query: str) -> str:
-    segments = SEARCH_SEGMENT_PATTERN.findall(query)
-    if not segments:
-        return query
-    return max(segments, key=len)
+def _search_with_like_fallback(
+    connection: sqlite3.Connection,
+    query: str,
+    limit: int,
+    group_openid: str,
+    user_openid: str,
+) -> list[sqlite3.Row]:
+    terms = _build_like_fallback_terms(query)
+    if not terms:
+        return []
+
+    required_matches = _required_like_matches(len(terms))
+    values_sql = ", ".join("(?)" for _ in terms)
+    patterns = [f"%{_escape_like(term)}%" for term in terms]
+    rows = connection.execute(
+        f"""
+        WITH query_terms(pattern) AS (VALUES {values_sql})
+        SELECT
+            c.id AS chunk_id,
+            d.id AS document_id,
+            d.source_path,
+            d.title,
+            c.heading,
+            c.content,
+            d.scope_type,
+            d.scope_openid,
+            -1.0 * SUM(
+                CASE WHEN (
+                    c.title LIKE query_terms.pattern ESCAPE '\\'
+                    OR c.heading LIKE query_terms.pattern ESCAPE '\\'
+                    OR c.content LIKE query_terms.pattern ESCAPE '\\'
+                ) THEN 1 ELSE 0 END
+            ) AS score
+        FROM knowledge_chunks AS c
+        JOIN knowledge_documents AS d
+          ON d.id = c.document_id
+        CROSS JOIN query_terms
+        WHERE (
+            d.scope_type = 'public'
+            OR (d.scope_type = 'group' AND d.scope_openid = ?)
+            OR (d.scope_type = 'private' AND d.scope_openid = ?)
+        )
+        GROUP BY
+            c.id,
+            d.id,
+            d.source_path,
+            d.title,
+            c.heading,
+            c.content,
+            d.scope_type,
+            d.scope_openid,
+            c.chunk_index
+        HAVING -score >= ?
+        ORDER BY score, d.id, c.chunk_index
+        LIMIT ?
+        """,
+        (*patterns, group_openid, user_openid, required_matches, limit),
+    ).fetchall()
+    if not rows:
+        return []
+
+    best_score = float(rows[0]["score"])
+    return [row for row in rows if float(row["score"]) == best_score]
+
+
+def _build_like_fallback_terms(
+    query: str,
+    max_terms: int = MAX_LIKE_FALLBACK_TERMS,
+) -> list[str]:
+    terms: list[str] = []
+    for segment in SEARCH_SEGMENT_PATTERN.findall(str(query or "").lower()):
+        if CJK_PATTERN.fullmatch(segment) and len(segment) >= 2:
+            segment_terms = [
+                segment[index : index + 2] for index in range(len(segment) - 1)
+            ]
+        else:
+            segment_terms = [segment]
+
+        for term in segment_terms:
+            if term and term not in terms:
+                terms.append(term)
+            if len(terms) >= max_terms:
+                return terms
+    return terms
+
+
+def _required_like_matches(term_count: int) -> int:
+    if term_count <= 1:
+        return 1
+    return 2

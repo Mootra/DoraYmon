@@ -105,6 +105,85 @@ def save_message(
     return _row_to_message(row)
 
 
+def save_turn(
+    scope_type: str,
+    scope_openid: str,
+    user_openid: str,
+    user_content: str,
+    assistant_content: str,
+    max_content_length: int = DEFAULT_MAX_CONTENT_LENGTH,
+    retain_messages: int | None = None,
+) -> tuple[ChatMessage, ChatMessage]:
+    normalized_scope_type = _normalize_scope_type(scope_type)
+    normalized_user_openid = _require_text(user_openid, "user_openid")
+    normalized_scope_openid = _normalize_scope_openid(
+        normalized_scope_type,
+        scope_openid,
+        normalized_user_openid,
+    )
+    normalized_user_content = _normalize_content(user_content, max_content_length)
+    normalized_assistant_content = _normalize_content(
+        assistant_content,
+        max_content_length,
+    )
+
+    with closing(get_connection("doraymon")) as connection:
+        try:
+            user_cursor = connection.execute(
+                """
+                INSERT INTO chat_messages (
+                    scope_type, scope_openid, user_openid, role, content
+                )
+                VALUES (?, ?, ?, 'user', ?)
+                """,
+                (
+                    normalized_scope_type,
+                    normalized_scope_openid,
+                    normalized_user_openid,
+                    normalized_user_content,
+                ),
+            )
+            assistant_cursor = connection.execute(
+                """
+                INSERT INTO chat_messages (
+                    scope_type, scope_openid, user_openid, role, content
+                )
+                VALUES (?, ?, ?, 'assistant', ?)
+                """,
+                (
+                    normalized_scope_type,
+                    normalized_scope_openid,
+                    normalized_user_openid,
+                    normalized_assistant_content,
+                ),
+            )
+            rows = connection.execute(
+                """
+                SELECT id, scope_type, scope_openid, user_openid, role, content, created_at
+                FROM chat_messages
+                WHERE id IN (?, ?)
+                ORDER BY id
+                """,
+                (user_cursor.lastrowid, assistant_cursor.lastrowid),
+            ).fetchall()
+            if retain_messages is not None:
+                _prune_session_messages(
+                    connection,
+                    normalized_scope_type,
+                    normalized_scope_openid,
+                    normalized_user_openid,
+                    retain_messages,
+                )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+
+    if len(rows) != 2:
+        raise RuntimeError("saved chat turn could not be read back")
+    return _row_to_message(rows[0]), _row_to_message(rows[1])
+
+
 def list_recent_messages(
     scope_type: str,
     scope_openid: str,
@@ -171,6 +250,53 @@ def clear_messages(scope_type: str, scope_openid: str, user_openid: str) -> int:
         return int(cursor.rowcount)
 
 
+def expire_messages(
+    scope_type: str,
+    scope_openid: str,
+    user_openid: str,
+    ttl_minutes: int,
+) -> int:
+    normalized_scope_type = _normalize_scope_type(scope_type)
+    normalized_user_openid = _require_text(user_openid, "user_openid")
+    normalized_scope_openid = _normalize_scope_openid(
+        normalized_scope_type,
+        scope_openid,
+        normalized_user_openid,
+    )
+    normalized_ttl = int(ttl_minutes)
+    if normalized_ttl <= 0:
+        return 0
+
+    with closing(get_connection("doraymon")) as connection:
+        cursor = connection.execute(
+            """
+            DELETE FROM chat_messages
+            WHERE scope_type = ?
+              AND scope_openid = ?
+              AND user_openid = ?
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM chat_messages AS recent
+                  WHERE recent.scope_type = ?
+                    AND recent.scope_openid = ?
+                    AND recent.user_openid = ?
+                    AND recent.created_at >= datetime('now', ?)
+              )
+            """,
+            (
+                normalized_scope_type,
+                normalized_scope_openid,
+                normalized_user_openid,
+                normalized_scope_type,
+                normalized_scope_openid,
+                normalized_user_openid,
+                f"-{normalized_ttl} minutes",
+            ),
+        )
+        connection.commit()
+        return int(cursor.rowcount)
+
+
 def count_messages(scope_type: str, scope_openid: str, user_openid: str) -> int:
     normalized_scope_type = _normalize_scope_type(scope_type)
     normalized_user_openid = _require_text(user_openid, "user_openid")
@@ -204,6 +330,55 @@ def _normalize_scope_type(scope_type: str) -> str:
     if normalized not in VALID_SCOPE_TYPES:
         raise ValueError("scope_type must be private or group")
     return normalized
+
+
+def _prune_session_messages(
+    connection,
+    scope_type: str,
+    scope_openid: str,
+    user_openid: str,
+    retain_messages: int,
+) -> None:
+    normalized_retain = max(0, int(retain_messages))
+    if normalized_retain % 2:
+        normalized_retain -= 1
+
+    if normalized_retain == 0:
+        connection.execute(
+            """
+            DELETE FROM chat_messages
+            WHERE scope_type = ? AND scope_openid = ? AND user_openid = ?
+            """,
+            (scope_type, scope_openid, user_openid),
+        )
+        return
+
+    connection.execute(
+        """
+        DELETE FROM chat_messages
+        WHERE scope_type = ?
+          AND scope_openid = ?
+          AND user_openid = ?
+          AND id NOT IN (
+              SELECT id
+              FROM chat_messages
+              WHERE scope_type = ?
+                AND scope_openid = ?
+                AND user_openid = ?
+              ORDER BY id DESC
+              LIMIT ?
+          )
+        """,
+        (
+            scope_type,
+            scope_openid,
+            user_openid,
+            scope_type,
+            scope_openid,
+            user_openid,
+            normalized_retain,
+        ),
+    )
 
 
 def _normalize_role(role: str) -> str:

@@ -13,6 +13,7 @@ def handle(context: BotContext) -> str:
             f"{prefix}chat 你好 - 调用 DeepSeek 聊天",
             f"{prefix}清空上下文 - 清空当前会话的短期上下文",
             f"{prefix}上下文状态 - 查看当前会话的上下文状态",
+            f"{prefix}上下文摘要 - 查看当前会话的本地压缩摘要",
             "私聊普通文本、群聊 @ 普通文本也会进入 AI 聊天",
             "",
             "📚 知识库",

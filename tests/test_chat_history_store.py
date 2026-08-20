@@ -9,9 +9,11 @@ from unittest.mock import patch
 
 from storage.chat_history_store import (
     clear_messages,
+    expire_messages,
     init_chat_history_table,
     list_recent_messages,
     save_message,
+    save_turn,
 )
 
 
@@ -80,6 +82,41 @@ class ChatHistoryStoreTest(unittest.TestCase):
 
         self.assertEqual([message.content for message in messages], ["消息 2", "消息 3", "消息 4"])
 
+    def test_save_turn_is_atomic_when_assistant_content_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            save_turn(
+                "private",
+                "user-a",
+                "user-a",
+                "正常问题",
+                "包含 DEEPSEEK_" + "API_KEY= 的回答",
+            )
+
+        self.assertEqual(list_recent_messages("private", "user-a", "user-a", 10), [])
+
+    def test_save_turn_prunes_to_complete_recent_turns(self) -> None:
+        for index in range(4):
+            save_turn(
+                "private",
+                "user-a",
+                "user-a",
+                f"问题 {index}",
+                f"回答 {index}",
+                retain_messages=5,
+            )
+
+        messages = list_recent_messages("private", "user-a", "user-a", 10)
+
+        self.assertEqual(
+            [(message.role, message.content) for message in messages],
+            [
+                ("user", "问题 2"),
+                ("assistant", "回答 2"),
+                ("user", "问题 3"),
+                ("assistant", "回答 3"),
+            ],
+        )
+
     def test_messages_are_returned_from_old_to_new(self) -> None:
         save_message("private", "user-a", "user-a", "user", "第一条")
         save_message("private", "user-a", "user-a", "assistant", "第二条")
@@ -132,6 +169,57 @@ class ChatHistoryStoreTest(unittest.TestCase):
         self.assertEqual(
             [message.content for message in list_recent_messages("group", "group-a", "user-a", 10)],
             ["群聊也保留"],
+        )
+
+    def test_expire_messages_removes_only_stale_target_session_messages(self) -> None:
+        save_turn("private", "user-a", "user-a", "过期问题", "过期回答")
+        save_turn("private", "user-b", "user-b", "保留问题", "保留回答")
+        with closing(self._get_connection("doraymon")) as connection:
+            connection.execute(
+                """
+                UPDATE chat_messages
+                SET created_at = datetime('now', '-120 minutes')
+                WHERE user_openid = 'user-a'
+                """
+            )
+            connection.commit()
+
+        removed = expire_messages("private", "user-a", "user-a", 60)
+
+        self.assertEqual(removed, 2)
+        self.assertEqual(list_recent_messages("private", "user-a", "user-a", 10), [])
+        self.assertEqual(
+            [message.content for message in list_recent_messages("private", "user-b", "user-b", 10)],
+            ["保留问题", "保留回答"],
+        )
+
+    def test_non_positive_ttl_keeps_messages(self) -> None:
+        save_turn("private", "user-a", "user-a", "问题", "回答")
+
+        removed = expire_messages("private", "user-a", "user-a", 0)
+
+        self.assertEqual(removed, 0)
+        self.assertEqual(len(list_recent_messages("private", "user-a", "user-a", 10)), 2)
+
+    def test_recent_activity_keeps_the_whole_session(self) -> None:
+        save_turn("private", "user-a", "user-a", "旧问题", "旧回答")
+        with closing(self._get_connection("doraymon")) as connection:
+            connection.execute(
+                """
+                UPDATE chat_messages
+                SET created_at = datetime('now', '-120 minutes')
+                WHERE user_openid = 'user-a'
+                """
+            )
+            connection.commit()
+        save_turn("private", "user-a", "user-a", "新问题", "新回答")
+
+        removed = expire_messages("private", "user-a", "user-a", 60)
+
+        self.assertEqual(removed, 0)
+        self.assertEqual(
+            [message.content for message in list_recent_messages("private", "user-a", "user-a", 10)],
+            ["旧问题", "旧回答", "新问题", "新回答"],
         )
 
     def test_long_content_is_truncated_to_limit(self) -> None:

@@ -101,6 +101,23 @@ def _build_rag_prompt(
     results: list[KnowledgeSearchResult],
     max_context_chars: int,
 ) -> tuple[str, list[KnowledgeSearchResult]]:
+    context, included = build_knowledge_context(results, max_context_chars)
+    prompt = "\n\n".join(
+        [
+            "用户问题：",
+            question,
+            "检索资料：",
+            context,
+            "请基于以上资料回答，并在结论后标注 [来源编号]。",
+        ]
+    )
+    return prompt, included
+
+
+def build_knowledge_context(
+    results: list[KnowledgeSearchResult],
+    max_context_chars: int,
+) -> tuple[str, list[KnowledgeSearchResult]]:
     blocks: list[str] = []
     included: list[KnowledgeSearchResult] = []
     used_chars = 0
@@ -125,16 +142,7 @@ def _build_rag_prompt(
         included.append(result)
         used_chars += len(block)
 
-    prompt = "\n\n".join(
-        [
-            "用户问题：",
-            question,
-            "检索资料：",
-            "\n\n".join(blocks),
-            "请基于以上资料回答，并在结论后标注 [来源编号]。",
-        ]
-    )
-    return prompt, included
+    return "\n\n".join(blocks), included
 
 
 def _format_answer(answer: str, results: list[KnowledgeSearchResult]) -> str:

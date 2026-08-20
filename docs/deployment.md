@@ -70,9 +70,12 @@ DEEPSEEK_API_KEY=
 BOT_ENABLE_CHAT_HISTORY=true
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+BOT_CHAT_CONTEXT_MAX_CHARS=6000
+BOT_CHAT_CONTEXT_SUMMARY_MAX_CHARS=1200
+BOT_CHAT_CONTEXT_TTL_MINUTES=60
 ```
 
-开启后，运行数据写入本地 SQLite；部署和备份时不要提交或公开真实数据库及聊天记录。
+开启后，运行数据写入本地 SQLite；闲置会话默认在最后活跃 60 分钟后整体过期，设置 `BOT_CHAT_CONTEXT_TTL_MINUTES=0` 可关闭自动过期。部署和备份时不要提交或公开真实数据库及聊天记录。
 
 本地知识库默认关闭。将 UTF-8 Markdown/TXT 放入 `resources/knowledge/` 后建立索引：
 

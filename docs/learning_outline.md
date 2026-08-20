@@ -9,7 +9,7 @@
 - `botpy` QQ Bot 长连接、命令路由和插件机制。
 - DeepSeek 对话；显式 `/chat`、私聊普通文本和群聊 @ 普通文本可以进入 chat 插件。
 - 默认关闭、按私聊用户或“群 + 用户”隔离的短期上下文。
-- `/清空上下文` 和 `/上下文状态`。
+- `/清空上下文`、`/上下文状态` 和 `/上下文摘要`。
 - 基于规则匹配的食物意图识别，以及 SQLite 业务数据存储。
 - 基于 SQLite FTS5/BM25 的本地知识库 RAG、来源引用和权限过滤。
 - 不依赖真实 QQ 或 DeepSeek 凭据的离线测试。
@@ -30,6 +30,9 @@
 BOT_ENABLE_CHAT_HISTORY=false
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
+BOT_CHAT_CONTEXT_MAX_CHARS=6000
+BOT_CHAT_CONTEXT_SUMMARY_MAX_CHARS=1200
+BOT_CHAT_CONTEXT_TTL_MINUTES=60
 ```
 
 需要持续验证：
@@ -38,6 +41,10 @@ BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 - 私聊用户之间隔离。
 - 群聊按“群 + 用户”隔离，不共享私人上下文。
 - DeepSeek 失败时不保存伪造的助手回答。
+- 只发送和保留完整问答轮次，并限制历史总字符数。
+- 超预算旧轮次只做本地节选压缩，闲置会话按最后活跃时间整体失效。
+- 只有明确的换话题表达清空当前会话，避免普通转折语句被误判。
+- 开启 RAG 后，短追问可以结合上一轮问题检索，检索故障时普通聊天仍可用。
 - 状态命令不返回完整聊天内容。
 - 密钥、配置内容和真实聊天数据库不进入测试或 Git。
 
@@ -80,6 +87,14 @@ MVP 命令：
 每次检索返回知识块 ID、相关性分数和来源元数据，方便调试和引用。
 
 ## 5. 建立固定 RAG 评测集
+
+仓库已加入第一版固定离线检索评测框架：`evals/rag_cases.jsonl` 保存样例，`evals/fixtures/knowledge/` 保存隔离的评测资料，`scripts/eval_rag.py` 使用临时数据库输出 Recall@K、MRR、无答案空召回准确率和权限泄漏数量。它是可重复的技术基线，不代表真实用户知识库已经达到生产质量。
+
+运行方式：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\eval_rag.py
+```
 
 先准备 20～50 个固定问题，覆盖：
 
