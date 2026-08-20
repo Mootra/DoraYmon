@@ -37,8 +37,8 @@ DoraYmon/
 - 命令路由
 - 插件式命令
 - DeepSeek 对话：显式 `/chat`、私聊普通文本、群聊 @ 普通文本
-- 统一对话编排：完整问答轮次、上下文字符预算，以及开启 RAG 后的可选知识增强
-- 可选短期上下文：默认关闭，支持查询状态、按当前会话清空和有限历史保留
+- 统一对话编排：完整问答轮次、旧轮次本地压缩、上下文字符预算，以及开启 RAG 后的可选知识增强
+- 可选短期上下文：默认关闭，支持闲置过期、明确换话题、防跨会话串话、查询摘要和按当前会话清空
 - 规则式食物意图识别（不是 AI 分类模型）
 - SQLite FTS5/BM25 本地知识问答、拒答规则和来源引用
 - 公共、群、私人知识库读取权限隔离
@@ -175,6 +175,8 @@ BOT_ENABLE_CHAT_HISTORY=true
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 BOT_CHAT_CONTEXT_MAX_CHARS=6000
+BOT_CHAT_CONTEXT_SUMMARY_MAX_CHARS=1200
+BOT_CHAT_CONTEXT_TTL_MINUTES=60
 ```
 
 ### 第八步：建立本地知识库（可选）
@@ -211,6 +213,8 @@ BOT_ENABLE_CHAT_HISTORY=false
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 BOT_CHAT_CONTEXT_MAX_CHARS=6000
+BOT_CHAT_CONTEXT_SUMMARY_MAX_CHARS=1200
+BOT_CHAT_CONTEXT_TTL_MINUTES=60
 BOT_ENABLE_RAG=false
 BOT_KNOWLEDGE_DIR=resources/knowledge
 BOT_RAG_TOP_K=3
@@ -252,11 +256,15 @@ BOT_ENABLE_CHAT_HISTORY=true
 BOT_CHAT_HISTORY_LIMIT=10
 BOT_CHAT_HISTORY_MAX_CONTENT_LENGTH=1000
 BOT_CHAT_CONTEXT_MAX_CHARS=6000
+BOT_CHAT_CONTEXT_SUMMARY_MAX_CHARS=1200
+BOT_CHAT_CONTEXT_TTL_MINUTES=60
 ```
 
 未配置 `DEEPSEEK_API_KEY` 时，进入 AI 聊天的消息会返回配置缺失提示。
 
-开启后，历史按完整的“用户问题 + 助手回答”轮次进入模型，并受 `BOT_CHAT_CONTEXT_MAX_CHARS` 总字符预算约束；数据库只保留配置允许的最近完整轮次。
+开启后，历史按完整的“用户问题 + 助手回答”轮次进入模型，并受 `BOT_CHAT_CONTEXT_MAX_CHARS` 总字符预算约束。超出预算时，较早完整轮次会先在本地压缩成受限的节选摘要，最近轮次保留原文；这不是长期记忆，也不会额外调用模型生成摘要。
+
+`BOT_CHAT_CONTEXT_TTL_MINUTES` 按当前会话最后活跃时间控制闲置过期，设置为 `0` 表示不自动过期。以“换个话题”“忽略之前的对话”“重新开始”等明确表达开头时，只清空当前会话旧历史并从新问题开始，普通的“另外……”不会自动清空。
 
 ## 初始命令
 
@@ -267,6 +275,7 @@ BOT_CHAT_CONTEXT_MAX_CHARS=6000
 /chat 你好
 /清空上下文
 /上下文状态
+/上下文摘要
 /知识问 如何在本地启动项目
 /知识来源 如何在本地启动项目
 /知识库状态

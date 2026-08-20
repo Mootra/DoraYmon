@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from storage.chat_history_store import (
     clear_messages,
+    expire_messages,
     init_chat_history_table,
     list_recent_messages,
     save_message,
@@ -168,6 +169,57 @@ class ChatHistoryStoreTest(unittest.TestCase):
         self.assertEqual(
             [message.content for message in list_recent_messages("group", "group-a", "user-a", 10)],
             ["群聊也保留"],
+        )
+
+    def test_expire_messages_removes_only_stale_target_session_messages(self) -> None:
+        save_turn("private", "user-a", "user-a", "过期问题", "过期回答")
+        save_turn("private", "user-b", "user-b", "保留问题", "保留回答")
+        with closing(self._get_connection("doraymon")) as connection:
+            connection.execute(
+                """
+                UPDATE chat_messages
+                SET created_at = datetime('now', '-120 minutes')
+                WHERE user_openid = 'user-a'
+                """
+            )
+            connection.commit()
+
+        removed = expire_messages("private", "user-a", "user-a", 60)
+
+        self.assertEqual(removed, 2)
+        self.assertEqual(list_recent_messages("private", "user-a", "user-a", 10), [])
+        self.assertEqual(
+            [message.content for message in list_recent_messages("private", "user-b", "user-b", 10)],
+            ["保留问题", "保留回答"],
+        )
+
+    def test_non_positive_ttl_keeps_messages(self) -> None:
+        save_turn("private", "user-a", "user-a", "问题", "回答")
+
+        removed = expire_messages("private", "user-a", "user-a", 0)
+
+        self.assertEqual(removed, 0)
+        self.assertEqual(len(list_recent_messages("private", "user-a", "user-a", 10)), 2)
+
+    def test_recent_activity_keeps_the_whole_session(self) -> None:
+        save_turn("private", "user-a", "user-a", "旧问题", "旧回答")
+        with closing(self._get_connection("doraymon")) as connection:
+            connection.execute(
+                """
+                UPDATE chat_messages
+                SET created_at = datetime('now', '-120 minutes')
+                WHERE user_openid = 'user-a'
+                """
+            )
+            connection.commit()
+        save_turn("private", "user-a", "user-a", "新问题", "新回答")
+
+        removed = expire_messages("private", "user-a", "user-a", 60)
+
+        self.assertEqual(removed, 0)
+        self.assertEqual(
+            [message.content for message in list_recent_messages("private", "user-a", "user-a", 10)],
+            ["旧问题", "旧回答", "新问题", "新回答"],
         )
 
     def test_long_content_is_truncated_to_limit(self) -> None:

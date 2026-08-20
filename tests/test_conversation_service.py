@@ -7,8 +7,11 @@ from unittest.mock import Mock
 from doraymon.config import Settings
 from services.conversation_service import (
     ConversationService,
+    build_context_window,
     build_retrieval_query,
+    is_explicit_topic_switch,
     select_complete_history,
+    summarize_history,
 )
 from services.deepseek_service import DEFAULT_SYSTEM_PROMPT
 from storage.chat_history_store import ChatMessage
@@ -87,6 +90,41 @@ class ConversationServiceTest(unittest.TestCase):
 
         self.assertEqual(query, "你好")
 
+    def test_context_window_compresses_older_turns_and_keeps_recent_turn(self) -> None:
+        history = [
+            self._message(1, "user", "旧问题" * 20),
+            self._message(2, "assistant", "旧回答" * 20),
+            self._message(3, "user", "新问题" * 15),
+            self._message(4, "assistant", "新回答" * 15),
+        ]
+
+        window = build_context_window(history, max_chars=200, summary_max_chars=60)
+
+        self.assertEqual(
+            [message.content for message in window.recent_history],
+            ["新问题" * 15, "新回答" * 15],
+        )
+        self.assertIn("较早对话摘要", window.older_summary)
+        self.assertIn("旧问题", window.older_summary)
+        self.assertLessEqual(len(window.older_summary), 60)
+
+    def test_summary_uses_only_complete_turns(self) -> None:
+        history = [
+            self._message(1, "user", "完整问题"),
+            self._message(2, "assistant", "完整回答"),
+            self._message(3, "user", "不完整问题"),
+        ]
+
+        summary = summarize_history(history)
+
+        self.assertIn("完整问题", summary)
+        self.assertNotIn("不完整问题", summary)
+
+    def test_explicit_topic_switch_requires_a_strong_prefix(self) -> None:
+        self.assertTrue(is_explicit_topic_switch("换个话题，聊聊 Python"))
+        self.assertTrue(is_explicit_topic_switch("忽略之前的对话，重新回答"))
+        self.assertFalse(is_explicit_topic_switch("另外这个问题怎么解决？"))
+
     def test_answer_combines_complete_history_and_optional_knowledge(self) -> None:
         model = Mock()
         model.chat_messages.return_value = "运行启动脚本即可。[1]"
@@ -122,6 +160,30 @@ class ConversationServiceTest(unittest.TestCase):
             group_openid="group-a",
             user_openid="user-a",
         )
+
+    def test_answer_injects_local_summary_when_history_exceeds_budget(self) -> None:
+        model = Mock()
+        model.chat_messages.return_value = "继续回答"
+        service = ConversationService(
+            Settings(
+                chat_context_max_chars=200,
+                chat_context_summary_max_chars=60,
+            ),
+            model_service=model,
+        )
+        history = [
+            self._message(1, "user", "旧问题" * 20),
+            self._message(2, "assistant", "旧回答" * 20),
+            self._message(3, "user", "新问题" * 15),
+            self._message(4, "assistant", "新回答" * 15),
+        ]
+
+        service.answer("继续", history)
+
+        messages = model.chat_messages.call_args.args[0]
+        self.assertIn("较早对话的本地压缩摘要", messages[0]["content"])
+        self.assertIn("旧问题", messages[0]["content"])
+        self.assertEqual(messages[1]["content"], "新问题" * 15)
 
     def test_unused_knowledge_does_not_add_source_footer(self) -> None:
         model = Mock()

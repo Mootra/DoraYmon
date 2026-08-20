@@ -18,6 +18,13 @@ from storage.chat_history_store import ChatMessage, init_chat_history_table, lis
 
 
 class ChatPluginHistoryTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.expire_patch = patch("plugins.chat.expire_messages", return_value=0)
+        self.expire_patch.start()
+
+    def tearDown(self) -> None:
+        self.expire_patch.stop()
+
     def _settings(self, history_enabled: bool = True, limit: int = 10) -> Settings:
         return Settings(
             deepseek_api_key="sk-test",
@@ -232,6 +239,30 @@ class ChatPluginHistoryTest(unittest.TestCase):
         asyncio.run(chat.handle(context))
 
         list_mock.assert_called_once_with("private", "user-a", "user-a", 2)
+
+    @patch("plugins.chat.save_turn")
+    @patch("plugins.chat.list_recent_messages")
+    @patch("plugins.chat.clear_messages")
+    @patch("plugins.chat.init_chat_history_table")
+    @patch("plugins.chat.DeepSeekService")
+    def test_explicit_topic_switch_starts_without_old_history(
+        self,
+        service_cls_mock,
+        init_mock,
+        clear_mock,
+        list_mock,
+        save_mock,
+    ) -> None:
+        service_cls_mock.return_value.chat_messages.return_value = "新话题回复"
+        context = self._context(args="换个话题，聊聊 Python")
+
+        reply = asyncio.run(chat.handle(context))
+
+        self.assertEqual(reply, "新话题回复")
+        clear_mock.assert_called_once_with("private", "user-a", "user-a")
+        list_mock.assert_not_called()
+        messages = service_cls_mock.return_value.chat_messages.call_args.args[0]
+        self.assertEqual(messages[-1]["content"], "换个话题，聊聊 Python")
 
     def test_private_users_are_isolated_when_history_is_enabled(self) -> None:
         with self._patched_temp_store(), patch("plugins.chat.DeepSeekService") as service_cls_mock:

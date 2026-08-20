@@ -4,12 +4,17 @@ import asyncio
 import logging
 
 from doraymon.context import BotContext
-from services.conversation_service import ConversationService
+from services.conversation_service import (
+    ConversationService,
+    is_explicit_topic_switch,
+    summarize_history,
+)
 from services.deepseek_service import DeepSeekService
 from storage.chat_history_store import (
     ChatMessage,
     clear_messages,
     count_messages,
+    expire_messages,
     init_chat_history_table,
     list_recent_messages,
     save_turn,
@@ -46,12 +51,21 @@ async def handle(context: BotContext) -> str:
         scope_type, scope_openid, user_openid = session
         try:
             init_chat_history_table()
-            history = list_recent_messages(
+            expire_messages(
                 scope_type,
                 scope_openid,
                 user_openid,
-                history_limit,
+                context.settings.chat_context_ttl_minutes,
             )
+            if is_explicit_topic_switch(prompt):
+                clear_messages(scope_type, scope_openid, user_openid)
+            else:
+                history = list_recent_messages(
+                    scope_type,
+                    scope_openid,
+                    user_openid,
+                    history_limit,
+                )
         except Exception:
             logger.exception("读取聊天历史失败，已退化为无历史对话")
 
@@ -110,6 +124,12 @@ def handle_context_status(context: BotContext) -> str:
     scope_type, scope_openid, user_openid = session
     try:
         init_chat_history_table()
+        expire_messages(
+            scope_type,
+            scope_openid,
+            user_openid,
+            context.settings.chat_context_ttl_minutes,
+        )
         message_count = count_messages(scope_type, scope_openid, user_openid)
     except Exception:
         logger.exception("读取聊天上下文状态失败")
@@ -125,8 +145,45 @@ def handle_context_status(context: BotContext) -> str:
             f"当前会话已保存消息数量：{message_count}",
             f"读取历史上限：{history_limit}",
             f"上下文字符预算：{max(200, int(context.settings.chat_context_max_chars))}",
+            f"上下文过期时间：{_ttl_label(context.settings.chat_context_ttl_minutes)}",
         ]
     )
+
+
+def handle_context_summary(context: BotContext) -> str:
+    session = _get_session(context)
+    if session is None:
+        return "无法识别当前会话，暂时不能查看上下文摘要。"
+
+    scope_type, scope_openid, user_openid = session
+    try:
+        init_chat_history_table()
+        expire_messages(
+            scope_type,
+            scope_openid,
+            user_openid,
+            context.settings.chat_context_ttl_minutes,
+        )
+        history = list_recent_messages(
+            scope_type,
+            scope_openid,
+            user_openid,
+            max(0, int(context.settings.chat_history_limit)),
+        )
+    except Exception:
+        logger.exception("读取聊天上下文摘要失败")
+        return "上下文摘要读取失败，请稍后再试。"
+
+    summary = summarize_history(
+        history,
+        max_chars=min(
+            1200,
+            max(200, int(context.settings.chat_context_summary_max_chars)),
+        ),
+    )
+    if not summary:
+        return f"当前{_session_label(scope_type)}还没有可用的完整问答上下文。"
+    return f"当前{_session_label(scope_type)}：\n{summary}"
 
 
 def _get_session(context: BotContext) -> tuple[str, str, str] | None:
@@ -146,3 +203,10 @@ def _is_deepseek_error(reply: str) -> bool:
 
 def _session_label(scope_type: str) -> str:
     return "群聊个人会话" if scope_type == "group" else "私聊会话"
+
+
+def _ttl_label(ttl_minutes: int) -> str:
+    normalized_ttl = int(ttl_minutes)
+    if normalized_ttl <= 0:
+        return "不自动过期"
+    return f"{normalized_ttl} 分钟"

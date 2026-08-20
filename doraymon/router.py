@@ -35,6 +35,7 @@ COMMANDS: dict[str, Handler] = {
     "chat": chat.handle,
     "清空上下文": chat.handle_clear_context,
     "上下文状态": chat.handle_context_status,
+    "上下文摘要": chat.handle_context_summary,
     "知识问": knowledge.handle_ask,
     "知识库状态": knowledge.handle_status,
     "知识来源": knowledge.handle_sources,

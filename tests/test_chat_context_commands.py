@@ -65,6 +65,7 @@ class ChatContextCommandsTest(unittest.TestCase):
     def test_clear_context_command_is_registered(self) -> None:
         self.assertIn("清空上下文", COMMANDS)
         self.assertIn("上下文状态", COMMANDS)
+        self.assertIn("上下文摘要", COMMANDS)
 
     def test_clear_context_clears_current_private_user(self) -> None:
         save_message("private", "user-a", "user-a", "user", "A 的问题")
@@ -149,6 +150,26 @@ class ChatContextCommandsTest(unittest.TestCase):
         self.assertIn("当前会话类型：group", reply)
         self.assertIn("当前会话已保存消息数量：2", reply)
         self.assertIn("读取历史上限：10", reply)
+        self.assertIn("上下文过期时间：60 分钟", reply)
+
+    def test_context_summary_shows_only_complete_current_session_turns(self) -> None:
+        save_message("private", "user-a", "user-a", "user", "A 的完整问题")
+        save_message("private", "user-a", "user-a", "assistant", "A 的完整回答")
+        save_message("private", "user-a", "user-a", "user", "A 的半轮问题")
+        save_message("private", "user-b", "user-b", "user", "B 的秘密问题")
+        save_message("private", "user-b", "user-b", "assistant", "B 的秘密回答")
+
+        reply = asyncio.run(route_incoming_message(self._context("/上下文摘要")))
+
+        self.assertIn("A 的完整问题", reply)
+        self.assertIn("A 的完整回答", reply)
+        self.assertNotIn("A 的半轮问题", reply)
+        self.assertNotIn("B 的秘密问题", reply)
+
+    def test_context_summary_reports_empty_session(self) -> None:
+        reply = asyncio.run(route_incoming_message(self._context("/上下文摘要")))
+
+        self.assertIn("还没有可用的完整问答上下文", reply)
 
     def test_commands_are_safe_when_history_is_disabled(self) -> None:
         status_reply = asyncio.run(
