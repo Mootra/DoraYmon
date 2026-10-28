@@ -6,4 +6,6 @@
 
 此分支用于历史实现参考；当前模块的离线验证不等于 QQ 平台、真实模型或长期运行已验收。
 
-2026-10-28 在源码副本中执行 `python -m unittest discover -s tests -t .`，1152 项通过。环境使用既有虚拟环境依赖，运行数据均由测试夹具产生。
+2026-10-28 在 Python 3.14 源码副本中执行 `python -m unittest discover -s tests -t .`，1152 项通过。环境使用既有虚拟环境依赖，运行数据均由测试夹具产生。
+
+云端离线门槛在 Python 3.14 下通过；Python 3.10 未通过，日志包含异步测试中 `ContextVar` 的跨上下文恢复错误。Python 3.10 兼容性尚未完成验证，见 [CI 结果](https://github.com/Mootra/DoraYmon/actions/runs/40634634239)。
