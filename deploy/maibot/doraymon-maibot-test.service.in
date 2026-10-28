@@ -1,0 +1,21 @@
+[Unit]
+Description=DoraYmon MaiBot backend
+Conflicts=doraymon-qq.service
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+WorkingDirectory=@PROJECT@
+ExecStart="@PROJECT@/.venv/bin/doraymon" run --instance "@INSTANCE@" --local "@LOCAL@" --napcat "@NAPCAT@"
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=Asia/Shanghai
+EnvironmentFile=-@INSTANCE@/config/agreements.env
+UMask=0077
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,4 @@
+pywebview>=5.4,<7
+pystray==0.19.5
+Pillow>=11,<13
+PyInstaller>=6.11,<7

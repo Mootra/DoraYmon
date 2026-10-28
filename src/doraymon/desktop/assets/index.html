@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DoraYmon</title><link rel="stylesheet" href="app.css"><script defer src="app.js"></script></head>
+<body>
+<svg class="symbols" aria-hidden="true"><defs>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11a8 8 0 0 1-8 8H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M7 8h10M7 12h7"/></symbol>
+<symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 10v11h16V10M3 10l2-7h14l2 7M3 10a3 3 0 0 0 5 2 3 3 0 0 0 4 0 3 3 0 0 0 4 0 3 3 0 0 0 5-2M9 21v-6h6v6"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="m3 6 1 1 2-2m-3 7 1 1 2-2m-3 7 1 1 2-2M10 6h11M10 12h11M10 18h11"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M20 12a8 8 0 0 0-14-5M4 12a8 8 0 0 0 14 5"/></symbol>
+</defs></svg>
+<aside class="sidebar">
+  <div class="identity"><span class="monogram">D</span><strong>DoraYmon</strong></div>
+  <nav aria-label="主导航">
+    <button class="nav-item active" data-view="overview" aria-current="page"><svg><use href="#i-grid"/></svg>概览</button>
+    <button class="nav-item" data-view="qq"><svg><use href="#i-chat"/></svg>QQ 管理</button>
+    <button class="nav-item" data-view="food"><svg><use href="#i-shop"/></svg>食物库<span id="nav-count" class="nav-count"></span></button>
+    <button class="nav-item" data-view="tasks"><svg><use href="#i-list"/></svg>采集任务</button>
+    <button class="nav-item" data-view="settings"><svg><use href="#i-settings"/></svg>设置</button>
+  </nav>
+  <div class="sidebar-bottom"><span class="owner-icon">管</span><div><span>管理员</span><strong id="owner-number">尚未连接</strong></div></div>
+</aside>
+<main>
+  <header class="page-header"><h1 id="page-title">概览</h1><div class="header-status"><span class="status-dot neutral" id="global-dot"></span><span id="global-state">读取状态</span><button class="icon-button" id="refresh" aria-label="刷新状态"><svg><use href="#i-refresh"/></svg></button></div></header>
+  <section class="view active" id="overview">
+    <div class="runtime-panel surface">
+      <div class="runtime-grid">
+        <div class="runtime-item"><div><h2>机器人 QQ</h2><strong id="qq-state">尚未读取</strong></div><span class="status-dot neutral" id="qq-dot"></span></div>
+        <div class="runtime-item"><div><h2>QQ 接入</h2><strong id="connection-state">尚未读取</strong></div><span class="status-dot neutral" id="connection-dot"></span></div>
+        <div class="runtime-item"><div><h2>聊天后端</h2><strong id="backend-state">尚未读取</strong></div><span class="status-dot neutral" id="backend-dot"></span></div>
+      </div>
+      <div class="runtime-controls"><button class="button primary" data-runtime="start">启动机器人<svg><use href="#i-arrow"/></svg></button><button class="button" data-runtime="reconnect">重新连接</button><button class="button quiet" id="open-qq">打开 QQ</button><button class="button quiet danger" data-runtime="stop">停止并关闭自启</button><span id="checked-time" class="updated"></span></div>
+      <p class="runtime-recovery" id="runtime-recovery" hidden></p>
+    </div>
+    <div class="section-heading"><h2>门店覆盖</h2><button class="text-button" data-go="food">查看食物库<svg><use href="#i-arrow"/></svg></button></div>
+    <div class="coverage-strip surface"><div><span>已收录门店</span><strong id="total-count">—</strong></div><div><span>热门100已收录</span><strong id="hot-count">—</strong></div><div><span>饮品门店</span><strong id="drink-count">—</strong></div><div><span>待核对位置</span><strong id="review-count">—</strong></div></div>
+    <div class="section-heading"><h2>最近操作</h2><button class="text-button" data-go="qq">QQ 管理<svg><use href="#i-arrow"/></svg></button></div>
+    <div class="surface table-wrap"><table><thead><tr><th>操作</th><th>目标</th><th>结果</th><th>时间</th></tr></thead><tbody id="recent-actions"></tbody></table><p class="empty" id="actions-empty">暂无管理操作</p></div>
+  </section>
+  <section class="view" id="qq">
+    <div class="qq-layout"><form class="surface action-form" id="action-form">
+      <h2>执行操作</h2>
+      <label for="action-type">操作</label><select id="action-type"><option value="private">发送私聊</option><option value="mention">群内 @</option><option value="friend_request">申请加好友</option><option value="approve_friend">处理好友申请</option></select>
+      <div id="group-field" hidden><label for="group-id">群号</label><input id="group-id" inputmode="numeric" autocomplete="off"></div>
+      <label for="target-id" id="target-label">目标 QQ 号</label><input id="target-id" inputmode="numeric" autocomplete="off" required>
+      <div id="message-field"><label for="message-text">消息内容</label><textarea id="message-text" rows="5" maxlength="2000" required></textarea></div>
+      <div id="approve-field" hidden><label for="approve-value">处理方式</label><select id="approve-value"><option value="yes">同意</option><option value="no">拒绝</option></select></div>
+      <p id="capability-note" class="form-note" hidden></p><button class="button primary" id="execute-button" type="submit"><span id="execute-label">发送私聊</span><svg><use href="#i-arrow"/></svg></button>
+      <div id="action-result" class="action-result" role="status" hidden></div>
+    </form><div class="contacts-column"><div class="surface contact-panel"><div class="section-heading compact"><h2>联系人</h2><div class="segmented"><button type="button" class="active" data-contacts="friends">好友</button><button type="button" data-contacts="groups">群</button></div><button class="icon-button" id="load-contacts" aria-label="读取联系人"><svg><use href="#i-refresh"/></svg></button></div><label class="sr-only" for="contacts-search">搜索联系人</label><input id="contacts-search" placeholder="搜索昵称、备注或号码"><div id="contact-list" class="contact-list"><p class="empty">点击刷新读取联系人</p></div></div><div class="surface command-reference"><h2>QQ 命令</h2><code>/私聊 QQ号 内容</code><code>/群消息 群号 QQ号 内容</code><code>/好友列表</code><code>/好友申请 请求标识 同意</code><code>/机器人帮助</code></div></div></div>
+  </section>
+  <section class="view" id="food">
+    <div class="food-toolbar"><div><strong id="food-total">0</strong><span> 个门店</span><span class="scope-tag">南昌主城区 · 红谷滩 · 瑶湖</span></div><div><button class="button small" id="refresh-catalog">刷新</button><button class="button small" id="export-catalog">导出 JSON</button></div></div>
+    <div class="segmented food-tabs" aria-label="门店范围"><button type="button" class="active" data-food-mode="all">全部门店</button><button type="button" data-food-mode="hot">热门已匹配</button><button type="button" data-food-mode="pending">热门待匹配</button></div>
+    <p id="rankings-note" class="form-note" hidden></p>
+    <div class="filters"><label class="sr-only" for="food-search">查找门店</label><input id="food-search" placeholder="查店名、品牌或地址"><label class="sr-only" for="area-filter">区域</label><select id="area-filter"><option value="">全部区域</option></select><label class="sr-only" for="category-filter">品类</label><select id="category-filter"><option value="">全部品类</option><option>饮品</option><option>甜品烘焙</option><option>正餐</option><option>粉面简餐</option><option>小吃</option></select><label class="sr-only" for="tag-filter">标签</label><select id="tag-filter"><option value="">全部标签</option></select><label class="sr-only" for="review-filter">核对状态</label><select id="review-filter"><option value="">全部状态</option><option value="review">位置待核对</option><option value="located">已记录地址</option><option value="inactive">来源提示停业</option></select></div>
+    <div class="surface table-wrap food-table"><table><thead><tr><th>门店</th><th>品牌 / 品类</th><th>区域</th><th>资料状态</th><th>来源</th></tr></thead><tbody id="food-rows"></tbody></table><p class="empty" id="food-empty">尚未载入门店资料</p></div>
+    <div class="pagination"><span id="food-page-note"></span><div><button class="button small" id="previous-page">上一页</button><span id="page-number">1</span><button class="button small" id="next-page">下一页</button></div></div><p id="catalog-mode" class="form-note" hidden></p>
+  </section>
+  <section class="view" id="tasks"><div class="food-toolbar"><span>南昌主城区 · 分店与品类核对</span><span class="badge" id="collection-state">等待采集</span><div><button class="button small" id="pause-collection">暂停采集</button><button class="button small" id="resume-collection">继续采集</button></div></div><div class="surface table-wrap"><table><thead><tr><th>任务</th><th>状态</th><th>已收录</th><th>待核对</th><th>更新时间</th></tr></thead><tbody id="task-rows"></tbody></table><p class="empty" id="tasks-empty">暂无采集任务</p></div><div class="section-heading"><h2>覆盖核对</h2></div><div class="surface coverage-notes" id="coverage-notes"></div></section>
+  <section class="view" id="settings">
+    <form class="surface settings-panel reply-settings" id="reply-settings-form">
+      <div class="section-heading compact"><h2>群聊回复</h2><button class="text-button" type="button" id="reload-reply-settings">重新读取</button></div>
+      <div class="setting-row"><label for="reply-group">群聊</label><select id="reply-group" disabled><option value="">正在读取群聊…</option></select></div>
+      <fieldset id="reply-settings-fields" disabled>
+        <div class="setting-row"><label for="reply-at">被 @ 时优先回复</label><input type="checkbox" id="reply-at" checked></div>
+        <div class="setting-row"><label for="reply-normal">平时活跃度（%）</label><input type="number" id="reply-normal" min="0.1" max="100" step="0.1" required></div>
+        <div class="setting-row"><label for="reply-conversation">连续对话活跃度（%）</label><input type="number" id="reply-conversation" min="0.1" max="100" step="0.1" required></div>
+        <div class="setting-row"><label for="reply-minutes">连续对话时长（分钟）</label><input type="number" id="reply-minutes" min="0" max="60" step="0.5" required></div>
+        <p class="reply-note">每次回复后重新计时；时长为 0 时关闭增强。活跃度不是逐条回复概率。</p>
+        <div class="reply-save"><span>保存时短暂重启聊天后端</span><button class="button primary" type="submit" id="save-reply-settings">保存并应用</button></div>
+      </fieldset>
+      <p id="reply-settings-state" class="reply-status" role="status">正在读取回复设置…</p>
+    </form>
+    <div class="surface settings-panel"><div class="setting-row"><div><h2>聊天配置</h2></div><button class="button" data-settings="chat">打开管理页<svg><use href="#i-arrow"/></svg></button></div><div class="setting-row"><div><h2>QQ 接入</h2></div><button class="button" data-settings="connection">打开管理页<svg><use href="#i-arrow"/></svg></button></div><div class="setting-row"><h2>管理员 QQ</h2><code id="settings-owner">尚未连接</code></div><div class="setting-row"><h2>关闭窗口</h2><span>收起到系统托盘，机器人继续运行</span></div></div>
+  </section>
+</main>
+<dialog id="shop-detail" aria-labelledby="detail-title"><div class="detail-heading"><h2 id="detail-title"></h2><button class="icon-button" id="close-detail" aria-label="关闭门店详情">×</button></div><dl id="detail-meta"></dl><h3>来源</h3><div id="detail-sources"></div><h3 id="detail-menu-heading">菜单</h3><p id="detail-menu"></p></dialog>
+<div id="toast" role="status" hidden></div>
+</body></html>

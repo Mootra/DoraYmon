@@ -1,0 +1,61 @@
+# DoraYmon 对 MaiBot bot_config.toml 的覆盖项，由 `doraymon prepare` 写入实例。
+# 只写有决策依据的键；MaiBot 已不存在的键会让 prepare 报错，用来发现升级后的配置变化。
+# 群号、QQ 号等本机值写在 ~/.config/doraymon/bot_config.toml，格式同本文件，示例见 deploy/local.example/。
+# 决策编号见 docs/roadmap.md 第 6 节。
+
+[plugin]
+silent_permission_denied = true
+
+[bot]
+nickname = "DoraYmon"
+# 沿用旧版的称呼名单（slim 的 bot_names）。
+alias_names = ["哆啦A梦", "哆啦", "小哆"]
+
+[personality]
+# 由旧仓库 resources/persona/default.md 改写为 MaiBot 的三段式；P2 按盲评继续调整。
+personality = "是 DoraYmon（大家也叫哆啦、小哆），QQ 里一个热心、靠谱的伙伴。有点哆啦A梦式的亲切感，但不是哆啦A梦本人，也没有神奇道具。会关心人，偶尔碎碎念或轻轻吐槽。"
+behavior_style = "被叫到或有人需要帮忙时接话；群里聊得热闹但和自己无关时安静看着，不硬找话题，不刷屏。有人说“没问你”或明显不想聊时就停下。有人问吃什么、校内或校外选店，先用 campus_food 按类别和归属随机挑店，再自然给出选择；换一家继续调用工具，不凭记忆加店名。推荐理由限于工具提供的店名、类别和归属，不编造口味、环境、营业或排名。只有用户明确要按起点或距离查店、地图导航时才用 nearby_food。"
+reply_style = "说话自然、简短，像朋友在 QQ 上聊天，一般一两句；需要解释时再展开。不用 Markdown、标题或列表符号，不每句都反问，也不每次都加表情。"
+
+[chat.reply_timing]
+# P2 从官方默认的“自然”档开始对比。
+message_debounce_mode = "natural"
+talk_value = 0.02
+inevitable_at_reply = true
+mentioned_bot_reply = false
+enable_talk_value_rules = false
+
+[expression]
+# D3：先只在私聊（访问名单只放行你本人）和本机覆盖里列出的测试群学习、使用表达方式。
+learning_list = [
+  { platform = "", item_id = "", type = "group", use = false, learn = false },
+  { platform = "", item_id = "", type = "private", use = true, learn = true },
+]
+
+[jargon]
+# D3：范围与表达学习一致。
+learning_list = [
+  { platform = "", item_id = "", type = "group", use = false, learn = false },
+  { platform = "", item_id = "", type = "private", use = true, learn = true },
+]
+
+[a_memorix.plugin]
+# D3：长期记忆需要嵌入模型，配好并确认范围后再开启。
+enabled = false
+
+[agent]
+# D10：电脑控制只走官方 QQ Bot，QQ 账号不接外部 Agent。
+enabled = false
+
+[telemetry]
+# D8
+enable = false
+
+[webui]
+# 管理界面只允许本机访问。
+host = ["127.0.0.1", "::1"]
+allowed_ips = "127.0.0.1"
+
+[maim_message]
+# 新版 API Server 开启时默认监听 0.0.0.0，保持关闭。
+enable_api_server = false

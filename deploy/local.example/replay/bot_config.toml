@@ -1,0 +1,11 @@
+# 回放实例的本机覆盖：用 --local deploy/local.example/replay 或复制后修改。
+# 回放实例与正式实例同时运行时，端口不能冲突。
+
+[bot]
+qq_account = "10001"
+
+[webui]
+port = 8002
+
+[maim_message]
+ws_server_port = 8010

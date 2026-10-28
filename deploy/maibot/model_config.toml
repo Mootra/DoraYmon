@@ -1,0 +1,24 @@
+# DoraYmon 对 MaiBot model_config.toml 的覆盖项。API Key 只填在实例的 model_config.toml（或 WebUI），不进仓库。
+
+[[models]]
+model_type = "llm"
+name = "deepseek-flash"
+model_identifier = "deepseek-flash"
+api_provider = "DeepSeek"
+# 用量金额按高峰单价估算，单位为元/百万 tokens；空闲时段实际扣费更低。
+# 核对日期：2026-10-24，https://api-docs.deepseek.com/zh-cn/quick_start/pricing/
+price_in = 2.0
+cache_price_in = 0.04
+price_out = 8.0
+
+[models.extra_params.thinking]
+type = "disabled"
+
+[model_task_config.replyer]
+model_list = ["deepseek-flash"]
+
+[model_task_config.planner]
+model_list = ["deepseek-flash"]
+
+[model_task_config.utils]
+model_list = ["deepseek-flash"]

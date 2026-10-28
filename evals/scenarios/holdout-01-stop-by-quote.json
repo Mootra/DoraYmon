@@ -1,0 +1,36 @@
+{
+  "name": "引用停聊只结束当前成员",
+  "split": "holdout",
+  "chat": {
+    "type": "group",
+    "group_id": "20005",
+    "group_name": "保留组回放群"
+  },
+  "members": {
+    "a": "小周",
+    "b": "老陈"
+  },
+  "steps": [
+    {
+      "at": 0,
+      "user": "a",
+      "text": "Git 怎么撤销暂存",
+      "mention_bot": true,
+      "expect": "reply"
+    },
+    {
+      "at": 50,
+      "user": "a",
+      "text": "不用回复了",
+      "quote": "bot",
+      "expect": "silent"
+    },
+    {
+      "at": 85,
+      "user": "b",
+      "text": "Git 怎么撤销暂存",
+      "mention_bot": true,
+      "expect": "reply"
+    }
+  ]
+}

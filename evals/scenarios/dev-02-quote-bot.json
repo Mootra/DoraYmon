@@ -1,0 +1,28 @@
+{
+  "name": "引用机器人继续问",
+  "split": "development",
+  "chat": {
+    "type": "group",
+    "group_id": "20001",
+    "group_name": "回放测试群"
+  },
+  "members": {
+    "a": "小林"
+  },
+  "steps": [
+    {
+      "at": 0,
+      "user": "a",
+      "text": "简单解释一下协程",
+      "mention_bot": true,
+      "expect": "reply"
+    },
+    {
+      "at": 50,
+      "user": "a",
+      "text": "接着说",
+      "quote": "bot",
+      "expect": "reply"
+    }
+  ]
+}

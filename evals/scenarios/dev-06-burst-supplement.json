@@ -1,0 +1,25 @@
+{
+  "name": "连续补充用餐条件",
+  "split": "development",
+  "chat": {
+    "type": "group",
+    "group_id": "20007",
+    "group_name": "连续输入回放群"
+  },
+  "members": {"a": "小林"},
+  "steps": [
+    {
+      "at": 0,
+      "user": "a",
+      "text": "晚上吃什么",
+      "mention_bot": true,
+      "expect": "silent"
+    },
+    {
+      "at": 0.2,
+      "user": "a",
+      "text": "15元以内，近一点",
+      "expect": "reply"
+    }
+  ]
+}

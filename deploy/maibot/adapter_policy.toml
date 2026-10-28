@@ -1,0 +1,10 @@
+# MaiBot 的入站访问名单。文件缺失等于全部放行，所以这里默认全部拦截；
+# 放行的群号和 QQ 号写在 ~/.config/doraymon/adapter_policy.toml，示例见 deploy/local.example/。
+
+[defaults.group]
+default_action = "block"
+allow_ids = []
+
+[defaults.private]
+default_action = "block"
+allow_ids = []

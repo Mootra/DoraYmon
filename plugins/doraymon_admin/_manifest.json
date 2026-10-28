@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+  "id": "mootra.doraymon-admin",
+  "version": "0.2.0",
+  "name": "DoraYmon 管理",
+  "description": "管理员 QQ 命令与本机桌面操作共用的执行入口。",
+  "author": {"name": "Mootra", "url": "https://github.com/Mootra"},
+  "license": "UNLICENSED",
+  "urls": {"repository": "https://github.com/Mootra/DoraYmon"},
+  "host_application": {"min_version": "1.3.15", "max_version": "1.3.99"},
+  "sdk": {"min_version": "2.16.0", "max_version": "2.99.99"},
+  "dependencies": [],
+  "capabilities": ["api.call", "send.text", "config.get", "frequency.get_adjust", "frequency.get_current_talk_value", "frequency.set_adjust"],
+  "i18n": {"default_locale": "zh-CN", "supported_locales": ["zh-CN"]}
+}

@@ -1,0 +1,36 @@
+{
+  "name": "问别人时让开",
+  "split": "development",
+  "chat": {
+    "type": "group",
+    "group_id": "20002",
+    "group_name": "回放测试群"
+  },
+  "members": {
+    "a": "小林",
+    "b": "阿杰"
+  },
+  "steps": [
+    {
+      "at": 0,
+      "user": "a",
+      "text": "Python 怎么去重？",
+      "mention_user": "b",
+      "expect": "silent"
+    },
+    {
+      "at": 25,
+      "user": "b",
+      "text": "用 set 就行",
+      "expect": "any"
+    },
+    {
+      "at": 45,
+      "user": "a",
+      "text": "那要保留顺序呢",
+      "quote": 1,
+      "expect": "silent"
+    }
+  ],
+  "settle": 40
+}

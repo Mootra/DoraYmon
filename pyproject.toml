@@ -1,0 +1,40 @@
+[project]
+name = "doraymon"
+version = "0.2.0"
+description = "DoraYmon on MaiBot: persona, nearby meal plugin, deployment tooling and replay evaluation"
+# MaiBot 官方镜像使用 Python 3.13；锁定同一小版本，避免依赖在新解释器上缺少 wheel。
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "maibot==1.3.15",
+  "aiohttp>=3.14,<4",
+  "pydantic>=2.12,<3",
+  "cachetools>=6,<8",
+  "mcp==1.30.0",
+  "httpx>=0.28,<1",
+  "tomlkit>=0.13,<1",
+]
+
+[project.scripts]
+doraymon = "doraymon.ops.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "pytest-socket>=0.7,<1", "ruff>=0.14,<1"]
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/doraymon"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q --disable-socket --allow-unix-socket"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]

@@ -1,0 +1,15 @@
+# 统一 QQ 连接器（MaiBot-SnowLuma-Adapter）的覆盖项。server、port、token 由 doraymon 从
+# NapCat 的 integration.json（或 --onebot）写入，不在这里填写。
+
+[plugin]
+config_version = "2.7.1"
+enabled = true
+
+[chat_abilities]
+# 最小权限：主动私聊、戳一戳、撤回、禁言、表情回应、合并转发都不交给模型。
+enable_private_chat_tool = false
+enable_poke_tool = false
+enable_recall_tool = false
+enable_mute_tool = false
+enable_emoji_like_tool = false
+enable_forward_tool = false

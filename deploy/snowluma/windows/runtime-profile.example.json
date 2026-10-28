@@ -1,0 +1,11 @@
+{
+  "distro": "Ubuntu",
+  "backendService": "doraymon-maibot-test.service",
+  "windowsPython": "C:\\path\\to\\python.exe",
+  "backendUnitBackup": "/home/user/.local/state/doraymon/snowluma/doraymon-maibot-test.service",
+  "backendUnitPath": "/home/user/.config/systemd/user/doraymon-maibot-test.service",
+  "adapterConfigBackup": "/home/user/.local/state/doraymon/snowluma/adapter.toml",
+  "adapterConfigPath": "/home/user/.local/share/doraymon/maibot-test/plugins/MaiBot-SnowLuma-Adapter/config.toml",
+  "launcherPath": "C:\\path\\to\\DoraYmon\\start.vbs",
+  "previousRuntime": "C:\\path\\to\\DoraYmon-NapCat"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "叫名字与语气纠正",
+  "split": "holdout",
+  "chat": {
+    "type": "group",
+    "group_id": "20006",
+    "group_name": "保留组回放群"
+  },
+  "members": {
+    "a": "小周"
+  },
+  "steps": [
+    {
+      "at": 0,
+      "user": "a",
+      "text": "哆啦，今天好烦",
+      "expect": "reply"
+    },
+    {
+      "at": 50,
+      "user": "a",
+      "text": "简单点，别用这种语气",
+      "expect": "reply"
+    }
+  ]
+}

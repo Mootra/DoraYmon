@@ -1,0 +1,24 @@
+{
+  "name": "私聊连续两轮",
+  "split": "development",
+  "chat": {
+    "type": "private"
+  },
+  "members": {
+    "me": "测试用户"
+  },
+  "steps": [
+    {
+      "at": 0,
+      "user": "me",
+      "text": "你好",
+      "expect": "reply"
+    },
+    {
+      "at": 45,
+      "user": "me",
+      "text": "接着讲讲你能帮我做什么",
+      "expect": "reply"
+    }
+  ]
+}

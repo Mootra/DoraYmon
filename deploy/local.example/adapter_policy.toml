@@ -1,0 +1,7 @@
+# 复制到 ~/.config/doraymon/adapter_policy.toml 后填写；只放行这里列出的群和人。
+
+[defaults.group]
+allow_ids = ["测试群号"]
+
+[defaults.private]
+allow_ids = ["你的QQ号"]

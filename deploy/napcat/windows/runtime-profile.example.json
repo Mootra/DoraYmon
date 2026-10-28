@@ -1,0 +1,5 @@
+{
+  "distro": "Ubuntu",
+  "backendService": "doraymon-maibot-test.service",
+  "windowsPython": "C:\\path\\to\\python.exe"
+}

@@ -1,0 +1,39 @@
+{
+  "name": "用餐连续追问",
+  "split": "development",
+  "chat": {
+    "type": "group",
+    "group_id": "20004",
+    "group_name": "饭搭子回放群"
+  },
+  "members": {
+    "a": "小林"
+  },
+  "steps": [
+    {
+      "at": 0,
+      "user": "a",
+      "text": "晚上吃什么",
+      "mention_bot": true,
+      "expect": "reply"
+    },
+    {
+      "at": 50,
+      "user": "a",
+      "text": "换一个",
+      "expect": "reply"
+    },
+    {
+      "at": 100,
+      "user": "a",
+      "text": "15元以内的",
+      "expect": "reply"
+    },
+    {
+      "at": 150,
+      "user": "a",
+      "text": "地图发我",
+      "expect": "reply"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# 复制到 ~/.config/doraymon/bot_config.toml 后填写真实值；这个目录不进 Git。
+# 列表会整体替换仓库里的同名列表，所以 learning_list 要写全。
+
+[bot]
+qq_account = "机器人QQ号"
+
+[expression]
+learning_list = [
+  { platform = "", item_id = "", type = "group", use = false, learn = false },
+  { platform = "", item_id = "", type = "private", use = true, learn = true },
+  { platform = "qq", item_id = "测试群号", type = "group", use = true, learn = true },
+]
+
+[jargon]
+learning_list = [
+  { platform = "", item_id = "", type = "group", use = false, learn = false },
+  { platform = "", item_id = "", type = "private", use = true, learn = true },
+  { platform = "qq", item_id = "测试群号", type = "group", use = true, learn = true },
+]
+
+[plugin]
+# 允许用聊天命令管理插件的人。
+permission = ["qq:你的QQ号"]
