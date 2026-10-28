@@ -1,0 +1,94 @@
+qqbot:
+  appid: ""
+  secret: ""
+  sandbox: true
+  # 官方平台的被动回复窗口与条数上限，本地先截断再发送。
+  reply_window_enabled: true
+
+deepseek:
+  api_key: ""
+  base_url: "https://api.deepseek.com"
+  model: "deepseek-v4-flash"
+  temperature: 0.7
+
+bot:
+  command_prefix: "/"
+  default_location: "江西师范大学瑶湖校区"
+  admin_openids: []
+  # 启动即静默；运行中可用管理员命令 /静默 on|off 切换。
+  silence: false
+
+food:
+  natural_trigger: true
+  # 人工整理的店铺/餐点目录；附近店铺必须有真实来源。
+  catalog_dir: "data/meal_catalog"
+  # 可选的地图/搜索服务；留空则完全离线。
+  nearby_provider: ""
+  nearby_provider_key: ""
+  nearby_provider_city: ""
+  nearby_provider_radius_meters: 1500
+
+chat:
+  history_enabled: true
+  history_limit: 40
+  history_max_content_length: 4000
+  context_max_chars: 6000
+  context_summary_max_chars: 1200
+  context_ttl_minutes: 720
+  summary_retention_days: 7
+
+reply:
+  max_segments: 3
+  max_total_chars: 4000
+
+rag:
+  enabled: false
+  knowledge_dir: "resources/knowledge"
+  top_k: 3
+  tokenizer: "trigram"
+  max_context_chars: 6000
+  chunk_max_chars: 800
+  chunk_overlap_chars: 100
+
+# QQ 账号入口（OneBot v11 / NapCat）。默认关闭。
+qq_account:
+  enabled: false
+  access_mode: "chat"  # allowlist 保留封闭验收模式，名单不可同时为空。
+  self_id: ""
+  ws_url: "ws://127.0.0.1:3001"
+  token: ""
+  groups: []  # chat 模式：留空处理账号所在群，有值则限定群范围。
+  friends: []  # 仅 allowlist 模式限制私聊和群成员。
+  group_reply_mode: "reply"
+  bot_names: ["DoraYmon", "哆啦A梦", "哆啦", "小哆"]
+  group_participation_enabled: true
+  group_participation_cooldown_seconds: 30
+  group_participation_max_replies: 2  # 普通接话每群每分钟最多 2 轮。
+  # @、引用、叫名字、命令和连续追问独立限频。
+  group_cooldown_seconds: 0
+  group_max_replies: 8
+  group_rate_window_seconds: 60
+
+# 飞书入口（企业自建应用 + 官方长连接）。默认关闭：它需要真实应用凭证。
+# bot_open_id 是机器人自己的 open_id，群聊靠它判断有没有被 @，必填。
+feishu:
+  enabled: false
+  app_id: ""
+  app_secret: ""
+  bot_open_id: ""
+  # 允许列表，默认拒绝：群用 chat_id，私聊用发送者 open_id。
+  chats: []
+  users: []
+  group_reply_mode: "reply"
+  group_cooldown_seconds: 3
+  group_max_replies: 8
+  group_rate_window_seconds: 60
+  domain: "feishu"
+  timeout_seconds: 10
+
+log:
+  level: "INFO"
+
+paths:
+  data_dir: "data"
+  log_dir: "logs"

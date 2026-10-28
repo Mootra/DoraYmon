@@ -1,0 +1,19 @@
+[Unit]
+Description=DoraYmon QQ account backend
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=@PROJECT@
+ExecStart="@PROJECT@/.venv/bin/python" "@CLIENT@" run
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=Asia/Shanghai
+UMask=0077
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target

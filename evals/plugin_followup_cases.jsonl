@@ -1,0 +1,10 @@
+{"id":"dialogue-301","category":"食物衔接","messages":["/吃什么 不辣，20元以内","刚才你推荐的是什么？只复述菜名，不要换推荐。"],"review":"第二轮应有本地推荐的历史，准确复述"}
+{"id":"dialogue-302","category":"知识来源追问","rag":true,"messages":["/知识问 如何在本地启动项目","这个说明的来源是什么？"],"review":"来源承接上一轮setup文档，不能跳到无关RAG文档"}
+{"id":"dialogue-303","category":"知识内容追问","rag":true,"messages":["/知识问 短期上下文是什么","可以清空它吗？"],"review":"识别它指短期上下文，提供已存在的清空命令"}
+{"id":"dialogue-304","category":"食物条件承接","messages":["/吃什么 不辣，20元以内","换一种，还是不要辣，预算也不变。"],"review":"承接预算和前一建议，不声称知道实时店家价格"}
+{"id":"dialogue-305","category":"跨用户食物隔离","messages":["/吃什么 不辣，20元以内",{"text":"你刚才给我推荐了哪道菜？","user":"another-user"}],"review":"不能读取另一用户的推荐"}
+{"id":"dialogue-306","category":"跨场景知识隔离","rag":true,"messages":["/知识问 如何在本地启动项目",{"text":"你刚才给我讲的是什么？","group":"eval-group"}],"review":"私聊的知识问答不能进入群聊请求"}
+{"id":"dialogue-307","category":"群聊插件衔接","messages":[{"text":"/吃什么 不辣，20元以内","group":"eval-group"},{"text":"刚才推荐的是哪个，复述一下","group":"eval-group"}],"review":"同群同用户可延续本地推荐"}
+{"id":"dialogue-308","category":"无资料拒答衔接","rag":true,"messages":["/知识问 火星酒店的预订电话号码是多少","你刚才是查到了还是没查到？"],"review":"理解上轮是无资料拒答，不能说查到了或假装联网搜索"}
+{"id":"dialogue-309","category":"命令语境","rag":true,"messages":["/知识问 /help命令做什么","那我应该发什么来查看命令列表？"],"review":"跟踪help命令用途，回答具体命令"}
+{"id":"dialogue-310","category":"知识边界","rag":true,"messages":["/知识问 短期上下文和长期记忆有什么区别","所以你会永远记住我吗？"],"review":"承接刚才说明，不冒充已实现长期记忆"}

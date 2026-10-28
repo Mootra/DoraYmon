@@ -1,0 +1,32 @@
+.env
+config.yaml
+*.db
+data/*.db
+data/*.sqlite
+# Each entry point keeps its own runtime data; never commit any of it.
+data/**/*.db
+data/**/*.sqlite
+# Import backups sit beside the catalogue and are never source.
+data/**/meal_catalog.backup-*.json
+logs/*
+!logs/.gitkeep
+*.log
+botpy.log*
+__pycache__/
+*.pyc
+.venv/
+venv/
+.conda/
+.idea/
+.vscode/
+.DS_Store
+*.zip
+*.tar.gz
+skills/friend_text_compact.md
+skills/private/
+resources/private/
+docs/private/
+
+# Local source/document snapshots; never part of a release.
+/backups/
+evals/results/

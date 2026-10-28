@@ -1,0 +1,68 @@
+{
+  "_comment": "示例目录：所有记录都是合成的，不代表任何真实店铺。字段含义见 docs/deployment.md。缺少来源的店铺或餐点会被加载器拒绝。",
+  "shops": [
+    {
+      "shop_id": "example-noodle",
+      "name": "示例兰州拉面（合成）",
+      "address": "示例路 1 号（合成）",
+      "map_url": "https://example.invalid/shop-noodle",
+      "distance_meters": 320,
+      "source": {
+        "kind": "map",
+        "reference": "synthetic-map/noodle",
+        "fetched_at": "2026-10-19"
+      }
+    },
+    {
+      "shop_id": "example-poi-only",
+      "name": "示例快餐（合成，仅 POI）",
+      "address": "示例路 9 号（合成）",
+      "distance_meters": 900,
+      "source": {
+        "kind": "map",
+        "reference": "synthetic-map/poi-only",
+        "fetched_at": "2026-10-19"
+      }
+    }
+  ],
+  "items": [
+    {
+      "item_id": "example-beef-noodle",
+      "shop_id": "example-noodle",
+      "name": "牛肉拉面（合成）",
+      "source": { "kind": "menu", "reference": "synthetic-menu/noodle#beef" },
+      "composition": ["手工拉面", "牛肉片", "清汤", "香菜"],
+      "composition_source": { "kind": "menu", "reference": "synthetic-menu/noodle#beef" },
+      "portion": "大碗，约 600 克",
+      "portion_source": { "kind": "review", "reference": "synthetic-review/noodle-9" },
+      "flavours": [
+        {
+          "description": "清汤牛肉汤底，面条偏硬",
+          "detail": "辣子单独提供",
+          "source": { "kind": "review", "reference": "synthetic-review/noodle-9" }
+        }
+      ],
+      "prices": [
+        {
+          "basis": "menu",
+          "amount_cny": 18,
+          "source": { "kind": "menu", "reference": "synthetic-menu/noodle#beef" }
+        }
+      ],
+      "suitable_meals": ["午餐", "晚餐"]
+    },
+    {
+      "item_id": "example-poi-guess",
+      "shop_id": "example-poi-only",
+      "name": "招牌套餐（合成，无菜单依据）",
+      "source": { "kind": "map", "reference": "synthetic-map/poi-only" },
+      "prices": [
+        {
+          "basis": "per_person",
+          "amount_cny": 25,
+          "source": { "kind": "map", "reference": "synthetic-map/poi-only" }
+        }
+      ]
+    }
+  ]
+}

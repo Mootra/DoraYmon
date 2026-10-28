@@ -1,0 +1,30 @@
+{
+  "development": [
+    {"name": "普通非名单私聊", "steps": [{"text": "你好", "private": true, "reply": true}, {"text": "接着讲", "private": true, "reply": true}]},
+    {"name": "无艾特知识求助", "steps": [{"text": "谁知道 Python 列表怎么去重？", "reply": true}, {"text": "要保留顺序呢", "reply": true}]},
+    {"name": "直接提问后快速追问", "steps": [{"text": "解释一下异步", "mention": "bot", "reply": true}, {"text": "给个例子", "reply": true}]},
+    {"name": "引用机器人", "steps": [{"text": "简单解释一下协程", "mention": "bot", "reply": true}, {"text": "接着说", "quote": "last_bot", "reply": true}]},
+    {"name": "自然叫名字", "steps": [{"text": "哆啦，陪我说两句", "reply": true}, {"text": "今天有点累", "reply": true}]},
+    {"name": "普通闲聊留白", "steps": [{"text": "今天好热啊", "reply": false}, {"text": "哈哈哈", "reply": false}]},
+    {"name": "明确艾特别人让开", "steps": [{"text": "Python 怎么去重？", "mention": "other", "reply": false}]},
+    {"name": "引用其他成员让开", "steps": [{"text": "我刚讲了一个例子", "user": "91002", "reply": false}, {"text": "再解释一下为什么？", "quote": "first", "reply": false}]},
+    {"name": "成员分支隔离", "steps": [{"text": "解释一下事件循环", "mention": "bot", "reply": true}, {"text": "再详细一点", "user": "91002", "reply": false}, {"text": "再详细一点", "reply": true}]},
+    {"name": "局部结束其他人仍能问", "steps": [{"text": "请教一下列表怎么排序", "reply": true}, {"text": "没问你", "reply": false}, {"text": "解释一下排序", "user": "91002", "mention": "bot", "reply": true}, {"text": "列表怎么排序？", "reply": false}, {"text": "现在问你，解释一下", "mention": "bot", "reply": true}]},
+    {"name": "道谢自然结束", "steps": [{"text": "解释一下递归", "mention": "bot", "reply": true}, {"text": "谢谢", "reply": false}]},
+    {"name": "用餐追问无需反复艾特", "steps": [{"text": "吃什么", "reply": true, "contains": "合成餐馆甲"}, {"text": "换一个", "reply": true, "contains": "合成餐馆乙"}, {"text": "15元以内", "reply": true, "contains": "预算按15元保留"}, {"text": "地图", "reply": true, "contains": "https://example.invalid/shop-b"}]},
+    {"name": "普通参与冷却不挡直接请求", "steps": [{"text": "谁知道 Python 怎么安装", "reply": true}, {"text": "谁知道 C++ 怎么安装", "user": "91002", "reply": false}, {"text": "解释一下安装步骤", "user": "91002", "mention": "bot", "reply": true}, {"text": "Windows 上呢", "reply": true}]},
+    {"name": "私聊不激活群分支", "steps": [{"text": "解释一下递归", "private": true, "reply": true}, {"text": "再来一个例子", "reply": false}]},
+    {"name": "群之间不继承分支", "steps": [{"text": "解释一下递归", "mention": "bot", "reply": true}, {"text": "再来一个例子", "group": "93001", "reply": false}]},
+    {"name": "语气纠正继续响应", "steps": [{"text": "哆啦，今天很烦", "reply": true}, {"text": "简单点，别用这种语气", "reply": true}]}
+  ],
+  "holdout": [
+    {"name": "新技术词问法", "steps": [{"text": "Rust 所有权和借用有什么区别？", "reply": true}, {"text": "能展示可变借用的例子吗", "reply": true}]},
+    {"name": "面向全群的提问", "steps": [{"text": "大家有推荐的时间管理方法吗？", "mention": "all", "reply": true}]},
+    {"name": "日常社交不插话", "steps": [{"text": "有人在吗", "reply": false}, {"text": "你吃饭了吗", "reply": false}, {"text": "有人开黑吗", "reply": false}]},
+    {"name": "引用停聊只结束当前成员", "steps": [{"text": "谁知道 Git 如何撤销暂存", "reply": true}, {"text": "不用回复了", "quote": "last_bot", "reply": false}, {"text": "Git 怎么撤销暂存", "user": "91002", "mention": "bot", "reply": true}]},
+    {"name": "未缓存引用补全正文", "steps": [{"text": "这句是什么意思", "quote": "external_bot", "reply": true}]},
+    {"name": "显式命令不必艾特", "steps": [{"text": "/ping", "reply": true, "contains": "pong"}]},
+    {"name": "字符串艾特和英文名字", "steps": [{"text": "说明一下生成器", "mention": "bot", "string": true, "reply": true}, {"text": "不用回复了", "reply": false}, {"text": "doraymon，重新聊聊生成器", "reply": true}]},
+    {"name": "闲置后短追问不抢答", "steps": [{"text": "讲讲二分查找", "mention": "bot", "reply": true}, {"text": "再来一个", "after": 121, "reply": false}]}
+  ]
+}

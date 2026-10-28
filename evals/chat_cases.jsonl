@@ -1,0 +1,15 @@
+{"id": "greeting", "messages": ["你好"]}
+{"id": "small-talk", "messages": ["今天有点累，陪我聊聊"]}
+{"id": "follow-up", "messages": ["我在学 Python 列表", "它和元组有什么区别？"]}
+{"id": "name-context", "messages": ["我叫小明", "我刚才说我叫什么？"]}
+{"id": "group-at", "group": "group-a", "messages": ["你好"]}
+{"id": "group-ignore", "group": "group-a", "at": false, "messages": ["你好"], "expect_reply": false, "min_chars": 0}
+{"id": "long-question", "messages": ["详细解释 Python 异步任务取消、异常处理与资源清理，给出例子。"]}
+{"id": "topic-switch", "messages": ["聊聊 Python", "换个话题，聊聊音乐"]}
+{"id": "clear-context", "messages": ["我在学 Python", "/清空上下文", "我刚才说了什么？"]}
+{"id": "context-status", "messages": ["你好", "/上下文状态"]}
+{"id": "help", "messages": ["/help"], "max_chars": 4000}
+{"id": "knowledge-question", "rag": true, "messages": ["/知识问 如何启动项目？"]}
+{"id": "knowledge-no-answer", "rag": true, "messages": ["/知识问 月球奶茶店的电话号码是多少？"]}
+{"id": "casual-with-rag", "rag": true, "messages": ["早上好"]}
+{"id": "remember-name", "requires": "long_term_memory", "messages": ["/记住 我叫小明", "/我的记忆"]}

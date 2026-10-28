@@ -1,0 +1,12 @@
+{
+  "distro": "Ubuntu",
+  "project": "/home/bot/projects/DoraYmon",
+  "environmentFile": "/mnt/c/QQ-NapCat/bot.env",
+  "dataDir": "/home/bot/projects/DoraYmon/data/qq_account_run",
+  "logDir": "/home/bot/projects/DoraYmon/logs/qq_account",
+  "accessMode": "allowlist",
+  "friends": [],
+  "groups": [],
+  "leasePath": "/mnt/c/QQ-NapCat/computer-bridge-lease.json",
+  "windowsPython": "C:\\path\\DoraYmon\\.venv\\Scripts\\python.exe"
+}

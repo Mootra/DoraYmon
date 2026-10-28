@@ -1,0 +1,24 @@
+{"id":"setup-python","query":"第一次运行需要什么 Python 版本，怎样安装依赖？","expected_sources":["setup.md"],"answerable":true}
+{"id":"setup-credentials","query":"QQ 机器人的 AppID 和 AppSecret 应该填在哪里？","expected_sources":["setup.md"],"answerable":true}
+{"id":"setup-ping","query":"启动以后怎样确认机器人已经连通？","expected_sources":["setup.md","commands.md"],"answerable":true}
+{"id":"command-group-at","query":"群聊普通消息为什么要先艾特机器人？","expected_sources":["commands.md"],"answerable":true}
+{"id":"command-status","query":"用什么命令查看机器人运行模式？","expected_sources":["commands.md"],"answerable":true}
+{"id":"rag-rebuild","query":"怎样离线重建本地知识库索引？","expected_sources":["rag.md"],"answerable":true}
+{"id":"rag-source","query":"知识来源命令有什么用途？","expected_sources":["rag.md"],"answerable":true}
+{"id":"rag-no-result","query":"知识库找不到可靠资料时应该怎样回答？","expected_sources":["rag.md"],"answerable":true}
+{"id":"rag-baseline","query":"当前 RAG 使用的是向量数据库吗？","expected_sources":["rag.md"],"answerable":true}
+{"id":"context-default","query":"短期聊天上下文默认开启吗？","expected_sources":["context.md"],"answerable":true}
+{"id":"context-clear","query":"怎样只清空当前聊天会话？","expected_sources":["context.md"],"answerable":true}
+{"id":"context-ttl","query":"聊天记录闲置多久会自动过期？","expected_sources":["context.md"],"answerable":true}
+{"id":"context-topic-switch","query":"我明确说换个话题以后旧对话如何处理？","expected_sources":["context.md"],"answerable":true}
+{"id":"context-not-memory","query":"机器人能不能永久记住我的所有对话？","expected_sources":["context.md"],"answerable":true,"note":"用于观察关键词检索对语义改写的召回能力"}
+{"id":"permission-design","query":"群资料和私人资料的读取权限怎样隔离？","expected_sources":["permissions.md"],"answerable":true}
+{"id":"permission-before-model","query":"权限过滤应该在模型生成前还是生成后完成？","expected_sources":["permissions.md"],"answerable":true}
+{"id":"group-allowed","query":"评测群的版本发布窗口是什么时候？","expected_sources":["groups/eval-group/rules.md"],"answerable":true,"group_openid":"eval-group","user_openid":"member-a"}
+{"id":"group-denied","query":"评测群的版本发布窗口是什么时候？","expected_sources":[],"answerable":false,"group_openid":"other-group","user_openid":"member-a"}
+{"id":"private-allowed","query":"我预留的测试代号是什么？","expected_sources":["users/eval-user/notes.md"],"answerable":true,"user_openid":"eval-user"}
+{"id":"private-denied","query":"评测用户预留的测试代号是什么？","expected_sources":[],"answerable":false,"user_openid":"other-user"}
+{"id":"unknown-gold-price","query":"今天国际黄金价格是多少？","expected_sources":[],"answerable":false}
+{"id":"unknown-pet-level","query":"我的宠物现在是多少级？","expected_sources":[],"answerable":false,"user_openid":"eval-user"}
+{"id":"semantic-follow-up","query":"怎样让它接着前面的话继续聊？","expected_sources":["context.md"],"answerable":true,"note":"有意保留的语义改写压力样例"}
+{"id":"semantic-local-run","query":"我刚下载项目，怎样在自己的电脑上跑起来？","expected_sources":["setup.md"],"answerable":true,"note":"有意保留的语义改写压力样例"}

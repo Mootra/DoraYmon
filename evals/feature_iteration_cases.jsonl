@@ -1,0 +1,20 @@
+{"id":"dialogue-201","category":"食物重复","messages":["今晚吃什么","今晚吃什么"],"review":"连续推荐的候选与理由是否合理；随机选择不保证相邻两次不同"}
+{"id":"dialogue-202","category":"忌口预算","messages":["吃什么，不要辣，20元以内","/吃什么 微辣，30元以内"],"review":"不辣不得仅作为加分项；微辣不要解析成重辣"}
+{"id":"dialogue-203","category":"预算不足","messages":["/吃什么 5元以内","/吃什么 只有10元"],"review":"无匹配时明确说明；价格区间跨预算不能承诺预算内"}
+{"id":"dialogue-204","category":"保存与临时口味","messages":["/记住口味 我喜欢辣","/吃什么 今天想吃清淡的，不辣"],"review":"本轮条件覆盖旧偏好，确认命令行为"}
+{"id":"dialogue-205","category":"姓名误路由","messages":["我叫小林","我叫什么"],"review":"两轮都应到聊天，第二轮请求含第一轮"}
+{"id":"dialogue-206","category":"宠物误路由","messages":["我的猫叫小白，今年三岁","我的猫叫什么"],"review":"宠物名字不得被解释成点外卖"}
+{"id":"dialogue-207","category":"群聊触发","messages":[{"text":"今晚吃什么","group":"eval-group","at":false,"expect_reply":false,"min_chars":0},{"text":"今晚吃什么","group":"eval-group","at":true}],"review":"未 @ 时忽略，@ 后本地推荐"}
+{"id":"dialogue-208","category":"点餐表达","messages":["今晚叫什么外卖","外卖点啥好，不能吃辣"],"review":"修复叫什么误判的同时保留真正点餐入口"}
+{"id":"dialogue-209","category":"用餐场景","messages":["早餐吃什么","/吃什么 晚饭，赶时间，30以内"],"review":"早餐候选有早餐标签；说明匹配理由"}
+{"id":"dialogue-210","category":"预算与热食","messages":["今天很累，吃什么，想吃热的，30以内","/吃什么 20元以内，不辣，少油"],"review":"说明真实满足的条件，不套用未提供的心情"}
+{"id":"dialogue-211","category":"轻松聊天","messages":["今天什么都不想干，陪我说两句，别安排任务","别分析我，就随便聊聊"],"max_chars":180,"review":"自然接话，不做心理分析或追加任务清单"}
+{"id":"dialogue-212","category":"情绪支持","messages":["我今天写的代码又报错了，有点烦","先不调代码，吐槽一句就好"],"max_chars":180,"review":"顺着当前意图，不坚持教程或盘问"}
+{"id":"dialogue-213","category":"文案约束","messages":["帮我给老师写一句请假说明，原因是牙疼，没有确定请假多久","直接给我能发的那句话"],"max_chars":160,"review":"不捏造时长，不追加多个版本和解释"}
+{"id":"dialogue-214","category":"上下文纠正","messages":["周三去苏州，预算600。先帮我整理成一句话","改成周四，其他不变"],"max_chars":180,"review":"只更正时间，保留其他约束，不反问已知信息"}
+{"id":"dialogue-215","category":"能力边界","messages":["你能明天早上提醒我交作业吗","那你刚才已经设置提醒了吗"],"max_chars":200,"review":"不能声称存在提醒执行能力"}
+{"id":"dialogue-216","category":"保存说明","messages":["你会保存我们的聊天吗","我想清空当前聊天上下文，怎么操作"],"max_chars":300,"review":"依据实际启用的短期历史说明，给出已有命令，不假称已执行"}
+{"id":"dialogue-217","category":"技术解释","messages":["用外卖的例子解释一下数据库索引，三句话以内","那为什么不把每一列都加索引"],"max_chars":500,"review":"清楚、按问题调整长度，不用模板式固定结尾"}
+{"id":"dialogue-218","category":"用户格式优先","messages":["只输出JSON，name是小林，age是20","只输出age这个整数"],"max_chars":100,"review":"纯文本默认风格不覆盖用户指定格式"}
+{"id":"dialogue-219","category":"时间与未知位置","messages":["今天几号，你知道我在哪个城市吗","那你知道我这里现在的天气吗"],"max_chars":220,"review":"使用注入日期；不知道城市或天气就不编造"}
+{"id":"dialogue-220","category":"群聊口吻","messages":[{"text":"我今天终于把项目跑起来了","group":"eval-group"},{"text":"哈哈，别夸得太狠","group":"eval-group"}],"max_chars":180,"review":"像群里的伙伴，适度回应，不硬加鸡汤或能力承诺"}
